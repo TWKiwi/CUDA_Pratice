@@ -16,16 +16,20 @@ void ArrayCompute();
 void ArrayCompute_multiple_threads();
 __global__ static void sumOfSquares(int *num, int* result);
 __global__ static void sumOfSquares_multiple_threads(int *num, int* result);
+cudaDeviceProp prop;
 
 int main()
 {
 	if (InitCUDA())
 	{
 		ArrayCompute();
+		printf("==================256Threads改良版==================\n");
 		ArrayCompute_multiple_threads();
 	}
+	
 
-
+	printf("\nDone!");
+	getchar();
 	return 0;
 }
 
@@ -43,7 +47,7 @@ bool InitCUDA()
 	int i;
 	for (i = 0; i < count; i++)
 	{
-		cudaDeviceProp prop;
+		
 		if (cudaGetDeviceProperties(&prop, i) == cudaSuccess)
 		{
 			if (prop.major >= 1)
@@ -155,8 +159,10 @@ void ArrayCompute_multiple_threads()
 	for (int i = 0; i < THREAD_NUM; i++) {
 		final_sum += sum[i];
 	}
-	printf("sum: %d\n", final_sum);
-	printf("執行時間 (GPU): %f\n", float(timeValue) / CLOCKS_PER_SEC);
+	float clock_cycle = prop.clockRate * 1e-3f * (float(timeValue) / CLOCKS_PER_SEC); 
+	float memory_bandwidth = 4 / (float(timeValue) / CLOCKS_PER_SEC); // 只適用於32位元資料前提 (1024 * 1024 * 32(bit)) / 8(bit -> byte) * 1024(byte -> kb) * 1024(kb -> mb)
+	printf("sum (GPU): %d\n", final_sum);
+	printf("執行時間 (GPU): %f 時脈: %fMHz 記憶體頻寬:%f MB/s\n", float(timeValue) / CLOCKS_PER_SEC, clock_cycle, memory_bandwidth);
 
 	final_sum = 0;
 	clock_t cpu_time = clock();
