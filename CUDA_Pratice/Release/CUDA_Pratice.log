@@ -1,21 +1,14 @@
-﻿已經開始建置於 2017/4/14 下午 05:46:50。
-     1>節點 2 (Rebuild 目標) 上的專案 "C:\Users\adimin\Documents\Visual Studio 2013\Projects\CUDA_Pratice\CUDA_Pratice\CUDA_Pratice.vcxproj"。
-     1>CudaClean:
-         cmd.exe /C "C:\Users\adimin\AppData\Local\Temp\tmp1d9621452e6b4861b2fade5db5cb06a2.cmd"
-         "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\bin\nvcc.exe" -ccbin "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin"  -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include"     --keep-dir Release -maxrregcount=0  --machine 32 --compile      -DWIN32 -DNDEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /O2 /FS /Zi  /MD " -o Release\kernel.cu.obj "C:\Users\adimin\Documents\Visual Studio 2013\Projects\CUDA_Pratice\CUDA_Pratice\kernel.cu" -clean
-         
-         C:\Users\adimin\Documents\Visual Studio 2013\Projects\CUDA_Pratice\CUDA_Pratice>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\bin\nvcc.exe" -ccbin "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin"  -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include"     --keep-dir Release -maxrregcount=0  --machine 32 --compile      -DWIN32 -DNDEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /O2 /FS /Zi  /MD " -o Release\kernel.cu.obj "C:\Users\adimin\Documents\Visual Studio 2013\Projects\CUDA_Pratice\CUDA_Pratice\kernel.cu" -clean 
-     1>CUDACOMPILE : nvcc warning : The 'compute_20', 'sm_20', and 'sm_21' architectures are deprecated, and may be removed in a future release (Use -Wno-deprecated-gpu-targets to suppress warning).
-         kernel.cu
-       AddCudaCompileDeps:
-         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\cl.exe /E /nologo /showIncludes /TP /D__CUDACC__ /DWIN32 /DNDEBUG /D_CONSOLE /D_MBCS /I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include" /I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\bin" /I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include" /I. /FIcuda_runtime.h /c "C:\Users\adimin\Documents\Visual Studio 2013\Projects\CUDA_Pratice\CUDA_Pratice\kernel.cu" 
-     1>專案 "C:\Users\adimin\Documents\Visual Studio 2013\Projects\CUDA_Pratice\CUDA_Pratice\CUDA_Pratice.vcxproj" (1) 正在節點 2 (CudaBuildCore 目標) 上建置 "C:\Users\adimin\Documents\Visual Studio 2013\Projects\CUDA_Pratice\CUDA_Pratice\CUDA_Pratice.vcxproj" (1:2)。
+﻿已經開始建置於 2017/4/14 下午 07:01:03。
+     1>節點 2 (Build 目標) 上的專案 "C:\Users\adimin\documents\visual studio 2013\Projects\CUDA_Pratice\CUDA_Pratice\CUDA_Pratice.vcxproj"。
+     1>AddCudaCompileDeps:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\cl.exe /E /nologo /showIncludes /TP /D__CUDACC__ /DWIN32 /DNDEBUG /D_CONSOLE /D_MBCS /I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include" /I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\bin" /I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include" /I. /FIcuda_runtime.h /c "C:\Users\adimin\documents\visual studio 2013\Projects\CUDA_Pratice\CUDA_Pratice\kernel.cu" 
+     1>專案 "C:\Users\adimin\documents\visual studio 2013\Projects\CUDA_Pratice\CUDA_Pratice\CUDA_Pratice.vcxproj" (1) 正在節點 2 (CudaBuildCore 目標) 上建置 "C:\Users\adimin\documents\visual studio 2013\Projects\CUDA_Pratice\CUDA_Pratice\CUDA_Pratice.vcxproj" (1:2)。
      1>CudaBuildCore:
          Compiling CUDA source file kernel.cu...
-         cmd.exe /C "C:\Users\adimin\AppData\Local\Temp\tmp17740083dd3c431fbcbb9dcc734e68c1.cmd"
-         "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\bin\nvcc.exe" -gencode=arch=compute_20,code=\"sm_20,compute_20\" --use-local-env --cl-version 2013 -ccbin "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin"  -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include"     --keep-dir Release -maxrregcount=0  --machine 32 --compile -cudart static     -DWIN32 -DNDEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /O2 /FS /Zi  /MD " -o Release\kernel.cu.obj "C:\Users\adimin\Documents\Visual Studio 2013\Projects\CUDA_Pratice\CUDA_Pratice\kernel.cu"
+         cmd.exe /C "C:\Users\adimin\AppData\Local\Temp\tmpfc45df910e2146898dd128a57a258a8a.cmd"
+         "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\bin\nvcc.exe" -gencode=arch=compute_20,code=\"sm_20,compute_20\" --use-local-env --cl-version 2013 -ccbin "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin"  -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include"     --keep-dir Release -maxrregcount=0  --machine 32 --compile -cudart static     -DWIN32 -DNDEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /O2 /FS /Zi  /MD " -o Release\kernel.cu.obj "C:\Users\adimin\documents\visual studio 2013\Projects\CUDA_Pratice\CUDA_Pratice\kernel.cu"
          
-         C:\Users\adimin\Documents\Visual Studio 2013\Projects\CUDA_Pratice\CUDA_Pratice>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\bin\nvcc.exe" -gencode=arch=compute_20,code=\"sm_20,compute_20\" --use-local-env --cl-version 2013 -ccbin "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin"  -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include"     --keep-dir Release -maxrregcount=0  --machine 32 --compile -cudart static     -DWIN32 -DNDEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /O2 /FS /Zi  /MD " -o Release\kernel.cu.obj "C:\Users\adimin\Documents\Visual Studio 2013\Projects\CUDA_Pratice\CUDA_Pratice\kernel.cu" 
+         C:\Users\adimin\documents\visual studio 2013\Projects\CUDA_Pratice\CUDA_Pratice>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\bin\nvcc.exe" -gencode=arch=compute_20,code=\"sm_20,compute_20\" --use-local-env --cl-version 2013 -ccbin "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin"  -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include"     --keep-dir Release -maxrregcount=0  --machine 32 --compile -cudart static     -DWIN32 -DNDEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /O2 /FS /Zi  /MD " -o Release\kernel.cu.obj "C:\Users\adimin\documents\visual studio 2013\Projects\CUDA_Pratice\CUDA_Pratice\kernel.cu" 
      1>C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include\cuda_runtime.h : warning C4819: 檔案含有無法在目前字碼頁 (950) 中表示的字元。請以 Unicode 格式儲存檔案以防止資料遺失
      1>c:\program files\nvidia gpu computing toolkit\cuda\v8.0\include\cuda_runtime_api.h(1946): warning C4819: 檔案含有無法在目前字碼頁 (950) 中表示的字元。請以 Unicode 格式儲存檔案以防止資料遺失
      1>c:\program files\nvidia gpu computing toolkit\cuda\v8.0\include\math_functions.h : warning C4819: 檔案含有無法在目前字碼頁 (950) 中表示的字元。請以 Unicode 格式儲存檔案以防止資料遺失
@@ -103,21 +96,21 @@
      1>c:\program files\nvidia gpu computing toolkit\cuda\v8.0\include\math_functions.h(7956): warning C4819: 檔案含有無法在目前字碼頁 (950) 中表示的字元。請以 Unicode 格式儲存檔案以防止資料遺失
      1>CUDACOMPILE : nvcc warning : The 'compute_20', 'sm_20', and 'sm_21' architectures are deprecated, and may be removed in a future release (Use -Wno-deprecated-gpu-targets to suppress warning).
          kernel.cu
-     1>專案 "C:\Users\adimin\Documents\Visual Studio 2013\Projects\CUDA_Pratice\CUDA_Pratice\CUDA_Pratice.vcxproj" (CudaBuildCore 目標) 建置完成。
+     1>專案 "C:\Users\adimin\documents\visual studio 2013\Projects\CUDA_Pratice\CUDA_Pratice\CUDA_Pratice.vcxproj" (CudaBuildCore 目標) 建置完成。
      1>Link:
-         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\adimin\Documents\Visual Studio 2013\Projects\CUDA_Pratice\Release\CUDA_Pratice.exe" /NOLOGO /LIBPATH:"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\lib\Win32" cudart.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\adimin\Documents\Visual Studio 2013\Projects\CUDA_Pratice\Release\CUDA_Pratice.pdb" /SUBSYSTEM:CONSOLE /OPT:REF /OPT:ICF /LTCG /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\adimin\Documents\Visual Studio 2013\Projects\CUDA_Pratice\Release\CUDA_Pratice.lib" /MACHINE:X86 /SAFESEH Release\kernel.cu.obj
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\adimin\documents\visual studio 2013\Projects\CUDA_Pratice\Release\CUDA_Pratice.exe" /NOLOGO /LIBPATH:"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\lib\Win32" cudart.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\adimin\documents\visual studio 2013\Projects\CUDA_Pratice\Release\CUDA_Pratice.pdb" /SUBSYSTEM:CONSOLE /OPT:REF /OPT:ICF /LTCG /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\adimin\documents\visual studio 2013\Projects\CUDA_Pratice\Release\CUDA_Pratice.lib" /MACHINE:X86 /SAFESEH Release\kernel.cu.obj
          LINK : 指定了 /LTCG，但未要求程式碼產生，請從連結命令列移除 /LTCG 以提升連結器效能
-         CUDA_Pratice.vcxproj -> C:\Users\adimin\Documents\Visual Studio 2013\Projects\CUDA_Pratice\Release\CUDA_Pratice.exe
+         CUDA_Pratice.vcxproj -> C:\Users\adimin\documents\visual studio 2013\Projects\CUDA_Pratice\Release\CUDA_Pratice.exe
        PostBuildEvent:
-         echo copy "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\bin\cudart*.dll" "C:\Users\adimin\Documents\Visual Studio 2013\Projects\CUDA_Pratice\Release\"
-         copy "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\bin\cudart*.dll" "C:\Users\adimin\Documents\Visual Studio 2013\Projects\CUDA_Pratice\Release\"
+         echo copy "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\bin\cudart*.dll" "C:\Users\adimin\documents\visual studio 2013\Projects\CUDA_Pratice\Release\"
+         copy "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\bin\cudart*.dll" "C:\Users\adimin\documents\visual studio 2013\Projects\CUDA_Pratice\Release\"
          :VCEnd
-         copy "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\bin\cudart*.dll" "C:\Users\adimin\Documents\Visual Studio 2013\Projects\CUDA_Pratice\Release\"
+         copy "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\bin\cudart*.dll" "C:\Users\adimin\documents\visual studio 2013\Projects\CUDA_Pratice\Release\"
          C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\bin\cudart32_80.dll
          C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\bin\cudart64_80.dll
          複製了         2 個檔案。
-     1>專案 "C:\Users\adimin\Documents\Visual Studio 2013\Projects\CUDA_Pratice\CUDA_Pratice\CUDA_Pratice.vcxproj" (Rebuild 目標) 建置完成。
+     1>專案 "C:\Users\adimin\documents\visual studio 2013\Projects\CUDA_Pratice\CUDA_Pratice\CUDA_Pratice.vcxproj" (Build 目標) 建置完成。
 
 建置成功。
 
-經過時間 00:00:03.52
+經過時間 00:00:03.39

@@ -14,8 +14,10 @@ bool InitCUDA();
 void GenerateNumbers(int *number, int size);
 void ArrayCompute();
 void ArrayCompute_multiple_threads();
+void ArrayCompute_multiple_threads_continuous_access();
 __global__ static void sumOfSquares(int *num, int* result);
 __global__ static void sumOfSquares_multiple_threads(int *num, int* result);
+__global__ static void sumOfSquares_multiple_threads_continuous_access(int *num, int* result);
 cudaDeviceProp prop;
 
 int main()
@@ -23,8 +25,10 @@ int main()
 	if (InitCUDA())
 	{
 		ArrayCompute();
-		printf("==================256Threads改良版==================\n");
+		printf("==================256Threads改良版本==================\n");
 		ArrayCompute_multiple_threads();
+		printf("==================256Threads 連續記憶體存取版本==================\n");
+		ArrayCompute_multiple_threads_continuous_access();
 	}
 	
 
@@ -86,7 +90,9 @@ void GenerateNumbers(int *number, int size)
 		number[i] = rand() % 10;
 	}
 }
-
+/*
+* 1 Thread版本
+*/
 void ArrayCompute()
 {
 	float timeValue;
@@ -126,6 +132,9 @@ void ArrayCompute()
 	printf("--執行時間 (CPU): %f\n", float(clock() - cpu_time) / CLOCKS_PER_SEC);
 }
 
+/*
+ * 256 Threads版本
+ */
 void ArrayCompute_multiple_threads()
 {
 	float timeValue;
@@ -174,6 +183,57 @@ void ArrayCompute_multiple_threads()
 }
 
 /*
+* 256 Threads版本
+* 連續記憶體存取版本
+*/
+void ArrayCompute_multiple_threads_continuous_access()
+{
+	float timeValue;
+	//-----------------------------------------------
+	int* gpudata, *result;
+	cudaEvent_t beginEvent;
+	cudaEvent_t endEvent;
+	cudaEventCreate(&beginEvent);
+	cudaEventCreate(&endEvent);
+	cudaEventRecord(beginEvent, 0);
+	GenerateNumbers(data, DATA_SIZE);
+	cudaMalloc((void**)&gpudata, sizeof(int)* DATA_SIZE);
+	cudaMalloc((void**)&result, sizeof(int)* THREAD_NUM);
+	cudaMemcpy(gpudata, data, sizeof(int)* DATA_SIZE, cudaMemcpyHostToDevice);
+
+	sumOfSquares_multiple_threads_continuous_access << <1, THREAD_NUM, 0 >> >(gpudata, result);
+
+	int sum[THREAD_NUM];
+	cudaEventRecord(endEvent, 0);
+	cudaEventSynchronize(endEvent);
+	cudaEventElapsedTime(&timeValue, beginEvent, endEvent);
+	cudaEventDestroy(beginEvent);
+	cudaEventDestroy(endEvent);
+	cudaMemcpy(&sum, result, sizeof(int)* THREAD_NUM, cudaMemcpyDeviceToHost);
+	cudaFree(gpudata);
+	cudaFree(result);
+	cudaFree(time);
+
+	//-----------------------------------------------
+	int final_sum = 0;
+	for (int i = 0; i < THREAD_NUM; i++) {
+		final_sum += sum[i];
+	}
+	float clock_cycle = prop.clockRate * 1e-3f * (float(timeValue) / CLOCKS_PER_SEC);
+	float memory_bandwidth = 4 / (float(timeValue) / CLOCKS_PER_SEC); // 只適用於32位元資料前提 (1024 * 1024 * 32(bit)) / 8(bit -> byte) * 1024(byte -> kb) * 1024(kb -> mb)
+	printf("sum (GPU): %d\n", final_sum);
+	printf("執行時間 (GPU): %f 時脈: %fMHz 記憶體頻寬:%f MB/s\n", float(timeValue) / CLOCKS_PER_SEC, clock_cycle, memory_bandwidth);
+
+	final_sum = 0;
+	clock_t cpu_time = clock();
+	for (int i = 0; i < DATA_SIZE; i++) {
+		final_sum += data[i] * data[i];
+	}
+	printf("sum (CPU): %d\n", final_sum);
+	printf("執行時間 (CPU): %f\n", float(clock() - cpu_time) / CLOCKS_PER_SEC);
+}
+
+/*
 * 原版平方加總程式
 */
 __global__ static void sumOfSquares(int *num, int* result)
@@ -186,6 +246,10 @@ __global__ static void sumOfSquares(int *num, int* result)
 	*result = sum;
 }
 
+/*
+* 改良後平方加總程式
+* 256 threads
+*/
 __global__ static void sumOfSquares_multiple_threads(int *num, int* result)
 {
 	const int tid = threadIdx.x;
@@ -193,6 +257,17 @@ __global__ static void sumOfSquares_multiple_threads(int *num, int* result)
 	int sum = 0;
 	int i;
 	for (i = tid * size; i < (tid + 1) * size; i++) {
+		sum += num[i] * num[i];
+	}
+	result[tid] = sum;
+}
+
+__global__ static void sumOfSquares_multiple_threads_continuous_access(int *num, int* result)
+{
+	const int tid = threadIdx.x;
+	int sum = 0;
+	int i;
+	for (i = tid; i < DATA_SIZE; i += THREAD_NUM) {
 		sum += num[i] * num[i];
 	}
 	result[tid] = sum;
