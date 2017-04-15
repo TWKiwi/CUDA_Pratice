@@ -8,7 +8,7 @@
 #include <iostream>
 #define DATA_SIZE 1048576
 #define BLOCK_NUM 32
-#define THREAD_NUM 1024
+#define THREAD_NUM 256
 
 int data[DATA_SIZE];
 bool InitCUDA();
@@ -17,10 +17,16 @@ void ArrayCompute();
 void ArrayCompute_multiple_threads();
 void ArrayCompute_multiple_threads_continuous_access();
 void ArrayCompute_multiple_threads_blocks_continuous_access();
+void ArrayCompute_shared_multiple_threads_blocks_continuous_access();
+void ArrayCompute_shared_multiple_threads_blocks_continuous_access_treesum();
+void ArrayCompute_shared_multiple_threads_blocks_continuous_access_better_treesum();
 __global__ static void sumOfSquares(int *num, int* result);
 __global__ static void sumOfSquares_multiple_threads(int *num, int* result);
 __global__ static void sumOfSquares_multiple_threads_continuous_access(int *num, int* result);
 __global__ static void sumOfSquares_multiple_threads_blocks_continuous_access(int *num, int* result);
+__global__ static void sumOfSquares_shared_multiple_threads_blocks_continuous_access(int *num, int* result);
+__global__ static void sumOfSquares_shared_multiple_threads_blocks_continuous_access_treesum(int *num, int* result);
+__global__ static void sumOfSquares_shared_multiple_threads_blocks_continuous_access_better_treesum(int *num, int* result);
 cudaDeviceProp prop;
 
 int main()
@@ -28,12 +34,18 @@ int main()
 	if (InitCUDA())
 	{
 		ArrayCompute();
-		printf("==================(1).%dThreads改良版本==================\n", THREAD_NUM);
+		printf("(1).%dThreads改良版本\n", THREAD_NUM);
 		ArrayCompute_multiple_threads();
-		printf("==================(2).(3).%dThreads 連續記憶體存取版本==================\n", THREAD_NUM);
+		printf("(2).(3).%dThreads 連續記憶體存取版本\n", THREAD_NUM);
 		ArrayCompute_multiple_threads_continuous_access();
-		printf("==================(4).%dThreads %dBlocks 連續記憶體存取版本==================\n", THREAD_NUM, BLOCK_NUM);
+		printf("(4).%dThreads %dBlocks 連續記憶體存取版本\n", THREAD_NUM, BLOCK_NUM);
 		ArrayCompute_multiple_threads_blocks_continuous_access();
+		printf("(5).Shared Memory %dThreads %dBlocks 連續記憶體存取版本\n", THREAD_NUM, BLOCK_NUM);
+		ArrayCompute_shared_multiple_threads_blocks_continuous_access();
+		printf("(6).TreeSum alg. Shared Memory %dThreads %dBlocks 連續記憶體存取版本\n", THREAD_NUM, BLOCK_NUM);
+		ArrayCompute_shared_multiple_threads_blocks_continuous_access_treesum();
+		printf("(7).改良TreeSum alg. Shared Memory %dThreads %dBlocks 連續記憶體存取版本\n", THREAD_NUM, BLOCK_NUM);
+		ArrayCompute_shared_multiple_threads_blocks_continuous_access_better_treesum();
 	}
 	
 
@@ -289,6 +301,158 @@ void ArrayCompute_multiple_threads_blocks_continuous_access()
 }
 
 /*
+* Shared Multiple Threads Blocks版本
+* 連續記憶體存取版本
+*/
+void ArrayCompute_shared_multiple_threads_blocks_continuous_access()
+{
+
+	float timeValue;
+	//-----------------------------------------------
+	int* gpudata, *result;
+	cudaEvent_t beginEvent;
+	cudaEvent_t endEvent;
+	cudaEventCreate(&beginEvent);
+	cudaEventCreate(&endEvent);
+	cudaEventRecord(beginEvent, 0);
+	GenerateNumbers(data, DATA_SIZE);
+	cudaMalloc((void**)&gpudata, sizeof(int)* DATA_SIZE);
+	cudaMalloc((void**)&result, sizeof(int)* THREAD_NUM * BLOCK_NUM);
+	cudaMemcpy(gpudata, data, sizeof(int)* DATA_SIZE, cudaMemcpyHostToDevice);
+	sumOfSquares_shared_multiple_threads_blocks_continuous_access << <BLOCK_NUM, THREAD_NUM, THREAD_NUM * sizeof(int) >> >(gpudata, result);
+	int sum[THREAD_NUM * BLOCK_NUM];
+	cudaEventRecord(endEvent, 0);
+	cudaEventSynchronize(endEvent);
+	cudaEventElapsedTime(&timeValue, beginEvent, endEvent);
+	cudaEventDestroy(beginEvent);
+	cudaEventDestroy(endEvent);
+	cudaMemcpy(&sum, result, sizeof(int)* THREAD_NUM * BLOCK_NUM, cudaMemcpyDeviceToHost);
+	cudaFree(gpudata);
+	cudaFree(result);
+	cudaFree(time);
+	//-----------------------------------------------
+	int final_sum = 0;
+	for (int i = 0; i < THREAD_NUM * BLOCK_NUM; i++) {
+		final_sum += sum[i];
+	}
+
+	float clock_cycle = prop.clockRate * 1e-3f * (float(timeValue) / CLOCKS_PER_SEC);
+	float memory_bandwidth = 4 / (float(timeValue) / CLOCKS_PER_SEC); // 只適用於32位元資料前提 (1024 * 1024 * 32(bit)) / 8(bit -> byte) * 1024(byte -> kb) * 1024(kb -> mb)
+	printf("sum (GPU): %d\n", final_sum);
+	printf("執行時間 (GPU): %f 時脈: %fMHz 記憶體頻寬:%f MB/s\n", float(timeValue) / CLOCKS_PER_SEC, clock_cycle, memory_bandwidth);
+
+	//final_sum = 0;
+	//clock_t cpu_time = clock();
+	//for (int i = 0; i < DATA_SIZE; i++) {
+	//	final_sum += data[i] * data[i];
+	//}
+	//printf("sum (CPU): %d\n", final_sum);
+	//printf("執行時間 (CPU): %f\n", float(clock() - cpu_time) / CLOCKS_PER_SEC);
+}
+
+/*
+* Shared Multiple Threads Blocks版本
+* 連續記憶體存取版本
+* TreeSum alg.
+*/
+void ArrayCompute_shared_multiple_threads_blocks_continuous_access_treesum()
+{
+
+	float timeValue;
+	//-----------------------------------------------
+	int* gpudata, *result;
+	cudaEvent_t beginEvent;
+	cudaEvent_t endEvent;
+	cudaEventCreate(&beginEvent);
+	cudaEventCreate(&endEvent);
+	cudaEventRecord(beginEvent, 0);
+	GenerateNumbers(data, DATA_SIZE);
+	cudaMalloc((void**)&gpudata, sizeof(int)* DATA_SIZE);
+	cudaMalloc((void**)&result, sizeof(int)* THREAD_NUM * BLOCK_NUM);
+	cudaMemcpy(gpudata, data, sizeof(int)* DATA_SIZE, cudaMemcpyHostToDevice);
+	sumOfSquares_shared_multiple_threads_blocks_continuous_access_treesum << <BLOCK_NUM, THREAD_NUM, THREAD_NUM * sizeof(int) >> >(gpudata, result);
+	int sum[THREAD_NUM * BLOCK_NUM];
+	cudaEventRecord(endEvent, 0);
+	cudaEventSynchronize(endEvent);
+	cudaEventElapsedTime(&timeValue, beginEvent, endEvent);
+	cudaEventDestroy(beginEvent);
+	cudaEventDestroy(endEvent);
+	cudaMemcpy(&sum, result, sizeof(int)* THREAD_NUM * BLOCK_NUM, cudaMemcpyDeviceToHost);
+	cudaFree(gpudata);
+	cudaFree(result);
+	cudaFree(time);
+	//-----------------------------------------------
+	int final_sum = 0;
+	for (int i = 0; i < THREAD_NUM * BLOCK_NUM; i++) {
+		final_sum += sum[i];
+	}
+
+	float clock_cycle = prop.clockRate * 1e-3f * (float(timeValue) / CLOCKS_PER_SEC);
+	float memory_bandwidth = 4 / (float(timeValue) / CLOCKS_PER_SEC); // 只適用於32位元資料前提 (1024 * 1024 * 32(bit)) / 8(bit -> byte) * 1024(byte -> kb) * 1024(kb -> mb)
+	printf("sum (GPU): %d\n", final_sum);
+	printf("執行時間 (GPU): %f 時脈: %fMHz 記憶體頻寬:%f MB/s\n", float(timeValue) / CLOCKS_PER_SEC, clock_cycle, memory_bandwidth);
+
+	//final_sum = 0;
+	//clock_t cpu_time = clock();
+	//for (int i = 0; i < DATA_SIZE; i++) {
+	//	final_sum += data[i] * data[i];
+	//}
+	//printf("sum (CPU): %d\n", final_sum);
+	//printf("執行時間 (CPU): %f\n", float(clock() - cpu_time) / CLOCKS_PER_SEC);
+}
+
+/*
+* Shared Multiple Threads Blocks版本
+* 連續記憶體存取版本
+* 改良TreeSum alg.
+*/
+void ArrayCompute_shared_multiple_threads_blocks_continuous_access_better_treesum()
+{
+
+	float timeValue;
+	//-----------------------------------------------
+	int* gpudata, *result;
+	cudaEvent_t beginEvent;
+	cudaEvent_t endEvent;
+	cudaEventCreate(&beginEvent);
+	cudaEventCreate(&endEvent);
+	cudaEventRecord(beginEvent, 0);
+	GenerateNumbers(data, DATA_SIZE);
+	cudaMalloc((void**)&gpudata, sizeof(int)* DATA_SIZE);
+	cudaMalloc((void**)&result, sizeof(int)* THREAD_NUM * BLOCK_NUM);
+	cudaMemcpy(gpudata, data, sizeof(int)* DATA_SIZE, cudaMemcpyHostToDevice);
+	sumOfSquares_shared_multiple_threads_blocks_continuous_access_better_treesum << <BLOCK_NUM, THREAD_NUM, THREAD_NUM * sizeof(int) >> >(gpudata, result);
+	int sum[THREAD_NUM * BLOCK_NUM];
+	cudaEventRecord(endEvent, 0);
+	cudaEventSynchronize(endEvent);
+	cudaEventElapsedTime(&timeValue, beginEvent, endEvent);
+	cudaEventDestroy(beginEvent);
+	cudaEventDestroy(endEvent);
+	cudaMemcpy(&sum, result, sizeof(int)* THREAD_NUM * BLOCK_NUM, cudaMemcpyDeviceToHost);
+	cudaFree(gpudata);
+	cudaFree(result);
+	cudaFree(time);
+	//-----------------------------------------------
+	int final_sum = 0;
+	for (int i = 0; i < THREAD_NUM * BLOCK_NUM; i++) {
+		final_sum += sum[i];
+	}
+
+	float clock_cycle = prop.clockRate * 1e-3f * (float(timeValue) / CLOCKS_PER_SEC);
+	float memory_bandwidth = 4 / (float(timeValue) / CLOCKS_PER_SEC); // 只適用於32位元資料前提 (1024 * 1024 * 32(bit)) / 8(bit -> byte) * 1024(byte -> kb) * 1024(kb -> mb)
+	printf("sum (GPU): %d\n", final_sum);
+	printf("執行時間 (GPU): %f 時脈: %fMHz 記憶體頻寬:%f MB/s\n", float(timeValue) / CLOCKS_PER_SEC, clock_cycle, memory_bandwidth);
+
+	//final_sum = 0;
+	//clock_t cpu_time = clock();
+	//for (int i = 0; i < DATA_SIZE; i++) {
+	//	final_sum += data[i] * data[i];
+	//}
+	//printf("sum (CPU): %d\n", final_sum);
+	//printf("執行時間 (CPU): %f\n", float(clock() - cpu_time) / CLOCKS_PER_SEC);
+}
+
+/*
 * 原版平方加總程式
 */
 __global__ static void sumOfSquares(int *num, int* result)
@@ -344,4 +508,101 @@ __global__ static void sumOfSquares_multiple_threads_blocks_continuous_access(in
 		sum += num[i] * num[i];
 	}
 	result[bid * THREAD_NUM + tid] = sum;
+}
+
+/*
+* 改良後平方加總程式
+* shared multiple threads blocks
+*/
+__global__ static void sumOfSquares_shared_multiple_threads_blocks_continuous_access(int *num, int* result)
+{
+	extern __shared__ int shared[];
+	const int tid = threadIdx.x;
+	const int bid = blockIdx.x;
+
+	int i;
+	shared[tid] = 0;
+
+	for (i = bid * THREAD_NUM + tid; i < DATA_SIZE;
+		i += BLOCK_NUM * THREAD_NUM) {
+		shared[tid] += num[i] * num[i];
+	}
+	__syncthreads();
+
+	if (tid == 0) {
+		for (i = 1; i < THREAD_NUM; i++) {
+			shared[0] += shared[i];
+		}
+		result[bid] = shared[0];
+	}
+}
+
+/*
+* 改良後平方加總程式
+* shared multiple threads blocks
+* TreeSum alg.
+*/
+__global__ static void sumOfSquares_shared_multiple_threads_blocks_continuous_access_treesum(int *num, int* result)
+{
+	extern __shared__ int shared[];
+	const int tid = threadIdx.x;
+	const int bid = blockIdx.x;
+	int i;
+	int offset = 1, mask = 1;
+	shared[tid] = 0;
+	for (i = bid * THREAD_NUM + tid; i < DATA_SIZE;i += BLOCK_NUM * THREAD_NUM) {
+		shared[tid] += num[i] * num[i];
+	}
+	__syncthreads();
+	while (offset < THREAD_NUM) {
+		if ((tid & mask) == 0) {
+			shared[tid] += shared[tid + offset];
+		}
+		offset += offset;
+		mask = offset + mask;
+		__syncthreads();
+	}
+	if (tid == 0) {
+		result[bid] = shared[0];
+	}
+}
+
+/*
+* 改良後平方加總程式
+* shared multiple threads blocks
+* 改良TreeSum alg.
+*/
+__global__ static void sumOfSquares_shared_multiple_threads_blocks_continuous_access_better_treesum(int *num, int* result)
+{
+	extern __shared__ int shared[];
+	const int tid = threadIdx.x;
+	const int bid = blockIdx.x;
+	int i;
+	int offset = 1, mask = 1;
+	shared[tid] = 0;
+	for (i = bid * THREAD_NUM + tid; i < DATA_SIZE; i += BLOCK_NUM * THREAD_NUM) {
+		shared[tid] += num[i] * num[i];
+	}
+	__syncthreads();
+	
+	if (tid < 128) { shared[tid] += shared[tid + 128]; }
+	__syncthreads();
+	if (tid < 64) { shared[tid] += shared[tid + 64]; }
+	__syncthreads();
+	if (tid < 32) { shared[tid] += shared[tid + 32]; }
+	__syncthreads();
+	if (tid < 16) { shared[tid] += shared[tid + 16]; }
+	__syncthreads();
+	if (tid < 8) { shared[tid] += shared[tid + 8]; }
+	__syncthreads();
+	if (tid < 4) { shared[tid] += shared[tid + 4]; }
+	__syncthreads();
+	if (tid < 2) { shared[tid] += shared[tid + 2]; }
+	__syncthreads();
+	if (tid < 1) { shared[tid] += shared[tid + 1]; }
+	__syncthreads();
+	
+	if (tid == 0) {
+		result[bid] = shared[0];
+	}
 }
