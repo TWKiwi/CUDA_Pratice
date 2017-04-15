@@ -147,6 +147,7 @@ void ArrayCompute()
 	}
 	printf("--sum (CPU): %d\n", sum);
 	printf("--執行時間 (CPU): %f\n", float(clock() - cpu_time) / CLOCKS_PER_SEC);
+
 }
 
 /*
@@ -187,16 +188,8 @@ void ArrayCompute_multiple_threads()
 	}
 	float clock_cycle = prop.clockRate * 1e-3f * (float(timeValue) / CLOCKS_PER_SEC); 
 	float memory_bandwidth = 4 / (float(timeValue) / CLOCKS_PER_SEC); // 只適用於32位元資料前提 (1024 * 1024 * 32(bit)) / 8(bit -> byte) * 1024(byte -> kb) * 1024(kb -> mb)
-	printf("sum (GPU): %d\n", final_sum);
-	printf("執行時間 (GPU): %f 時脈: %fMHz 記憶體頻寬:%f MB/s\n", float(timeValue) / CLOCKS_PER_SEC, clock_cycle, memory_bandwidth);
-
-	//final_sum = 0;
-	//clock_t cpu_time = clock();
-	//for (int i = 0; i < DATA_SIZE; i++) {
-	//	final_sum += data[i] * data[i];
-	//}
-	//printf("sum (CPU): %d\n", final_sum);
-	//printf("執行時間 (CPU): %f\n", float(clock() - cpu_time) / CLOCKS_PER_SEC);
+	printf("--sum (GPU): %d\n", final_sum);
+	printf("--執行時間 (GPU): %f | 時脈: %fMHz | 記憶體頻寬:%f MB/s\n", float(timeValue) / CLOCKS_PER_SEC, clock_cycle, memory_bandwidth);
 }
 
 /*
@@ -238,16 +231,8 @@ void ArrayCompute_multiple_threads_continuous_access()
 	}
 	float clock_cycle = prop.clockRate * 1e-3f * (float(timeValue) / CLOCKS_PER_SEC);
 	float memory_bandwidth = 4 / (float(timeValue) / CLOCKS_PER_SEC); // 只適用於32位元資料前提 (1024 * 1024 * 32(bit)) / 8(bit -> byte) * 1024(byte -> kb) * 1024(kb -> mb)
-	printf("sum (GPU): %d\n", final_sum);
-	printf("執行時間 (GPU): %f 時脈: %fMHz 記憶體頻寬:%f MB/s\n", float(timeValue) / CLOCKS_PER_SEC, clock_cycle, memory_bandwidth);
-
-	//final_sum = 0;
-	//clock_t cpu_time = clock();
-	//for (int i = 0; i < DATA_SIZE; i++) {
-	//	final_sum += data[i] * data[i];
-	//}
-	//printf("sum (CPU): %d\n", final_sum);
-	//printf("執行時間 (CPU): %f\n", float(clock() - cpu_time) / CLOCKS_PER_SEC);
+	printf("--sum (GPU): %d\n", final_sum);
+	printf("--執行時間 (GPU): %f | 時脈: %fMHz | 記憶體頻寬:%f MB/s\n", float(timeValue) / CLOCKS_PER_SEC, clock_cycle, memory_bandwidth);
 }
 
 /*
@@ -288,16 +273,8 @@ void ArrayCompute_multiple_threads_blocks_continuous_access()
 	
 	float clock_cycle = prop.clockRate * 1e-3f * (float(timeValue) / CLOCKS_PER_SEC);
 	float memory_bandwidth = 4 / (float(timeValue) / CLOCKS_PER_SEC); // 只適用於32位元資料前提 (1024 * 1024 * 32(bit)) / 8(bit -> byte) * 1024(byte -> kb) * 1024(kb -> mb)
-	printf("sum (GPU): %d\n", final_sum);
-	printf("執行時間 (GPU): %f 時脈: %fMHz 記憶體頻寬:%f MB/s\n", float(timeValue) / CLOCKS_PER_SEC, clock_cycle, memory_bandwidth);
-
-	//final_sum = 0;
-	//clock_t cpu_time = clock();
-	//for (int i = 0; i < DATA_SIZE; i++) {
-	//	final_sum += data[i] * data[i];
-	//}
-	//printf("sum (CPU): %d\n", final_sum);
-	//printf("執行時間 (CPU): %f\n", float(clock() - cpu_time) / CLOCKS_PER_SEC);
+	printf("--sum (GPU): %d\n", final_sum);
+	printf("--執行時間 (GPU): %f | 時脈: %fMHz | 記憶體頻寬:%f MB/s\n", float(timeValue) / CLOCKS_PER_SEC, clock_cycle, memory_bandwidth);
 }
 
 /*
@@ -338,16 +315,8 @@ void ArrayCompute_shared_multiple_threads_blocks_continuous_access()
 
 	float clock_cycle = prop.clockRate * 1e-3f * (float(timeValue) / CLOCKS_PER_SEC);
 	float memory_bandwidth = 4 / (float(timeValue) / CLOCKS_PER_SEC); // 只適用於32位元資料前提 (1024 * 1024 * 32(bit)) / 8(bit -> byte) * 1024(byte -> kb) * 1024(kb -> mb)
-	printf("sum (GPU): %d\n", final_sum);
-	printf("執行時間 (GPU): %f 時脈: %fMHz 記憶體頻寬:%f MB/s\n", float(timeValue) / CLOCKS_PER_SEC, clock_cycle, memory_bandwidth);
-
-	//final_sum = 0;
-	//clock_t cpu_time = clock();
-	//for (int i = 0; i < DATA_SIZE; i++) {
-	//	final_sum += data[i] * data[i];
-	//}
-	//printf("sum (CPU): %d\n", final_sum);
-	//printf("執行時間 (CPU): %f\n", float(clock() - cpu_time) / CLOCKS_PER_SEC);
+	printf("--sum (GPU): %d\n", final_sum);
+	printf("--執行時間 (GPU): %f | 時脈: %fMHz | 記憶體頻寬:%f MB/s\n", float(timeValue) / CLOCKS_PER_SEC, clock_cycle, memory_bandwidth);
 }
 
 /*
@@ -389,16 +358,8 @@ void ArrayCompute_shared_multiple_threads_blocks_continuous_access_treesum()
 
 	float clock_cycle = prop.clockRate * 1e-3f * (float(timeValue) / CLOCKS_PER_SEC);
 	float memory_bandwidth = 4 / (float(timeValue) / CLOCKS_PER_SEC); // 只適用於32位元資料前提 (1024 * 1024 * 32(bit)) / 8(bit -> byte) * 1024(byte -> kb) * 1024(kb -> mb)
-	printf("sum (GPU): %d\n", final_sum);
-	printf("執行時間 (GPU): %f 時脈: %fMHz 記憶體頻寬:%f MB/s\n", float(timeValue) / CLOCKS_PER_SEC, clock_cycle, memory_bandwidth);
-
-	//final_sum = 0;
-	//clock_t cpu_time = clock();
-	//for (int i = 0; i < DATA_SIZE; i++) {
-	//	final_sum += data[i] * data[i];
-	//}
-	//printf("sum (CPU): %d\n", final_sum);
-	//printf("執行時間 (CPU): %f\n", float(clock() - cpu_time) / CLOCKS_PER_SEC);
+	printf("--sum (GPU): %d\n", final_sum);
+	printf("--執行時間 (GPU): %f | 時脈: %fMHz | 記憶體頻寬:%f MB/s\n", float(timeValue) / CLOCKS_PER_SEC, clock_cycle, memory_bandwidth);
 }
 
 /*
@@ -440,16 +401,9 @@ void ArrayCompute_shared_multiple_threads_blocks_continuous_access_better_treesu
 
 	float clock_cycle = prop.clockRate * 1e-3f * (float(timeValue) / CLOCKS_PER_SEC);
 	float memory_bandwidth = 4 / (float(timeValue) / CLOCKS_PER_SEC); // 只適用於32位元資料前提 (1024 * 1024 * 32(bit)) / 8(bit -> byte) * 1024(byte -> kb) * 1024(kb -> mb)
-	printf("sum (GPU): %d\n", final_sum);
-	printf("執行時間 (GPU): %f 時脈: %fMHz 記憶體頻寬:%f MB/s\n", float(timeValue) / CLOCKS_PER_SEC, clock_cycle, memory_bandwidth);
+	printf("--sum (GPU): %d\n", final_sum);
+	printf("--執行時間 (GPU): %f | 時脈: %fMHz | 記憶體頻寬:%f MB/s\n", float(timeValue) / CLOCKS_PER_SEC, clock_cycle, memory_bandwidth);
 
-	//final_sum = 0;
-	//clock_t cpu_time = clock();
-	//for (int i = 0; i < DATA_SIZE; i++) {
-	//	final_sum += data[i] * data[i];
-	//}
-	//printf("sum (CPU): %d\n", final_sum);
-	//printf("執行時間 (CPU): %f\n", float(clock() - cpu_time) / CLOCKS_PER_SEC);
 }
 
 /*
