@@ -6,10 +6,14 @@
 #include <ctime>
 #include <ostream>
 #include <iostream>
+#include <thread>
+#include <string>
 #define DATA_SIZE 1048576
 #define BLOCK_NUM 32
 #define THREAD_NUM 256
+#define MODE 1
 
+std::string CMD = "";
 int data[DATA_SIZE];
 bool InitCUDA();
 void GenerateNumbers(int *number, int size);
@@ -29,29 +33,60 @@ __global__ static void sumOfSquares_shared_multiple_threads_blocks_continuous_ac
 __global__ static void sumOfSquares_shared_multiple_threads_blocks_continuous_access_better_treesum(int *num, int* result);
 cudaDeviceProp prop;
 
+
+//------------------------------------------
+
+void func_cmd()
+{
+	std::string cmd = CMD;
+	system(cmd.c_str());
+}
+
+
+
+//------------------------------------------
 int main()
 {
-	if (InitCUDA())
+	if (MODE == 0)
 	{
-		ArrayCompute();
-		printf("(1).%dThreads改良版本\n", THREAD_NUM);
-		ArrayCompute_multiple_threads();
-		printf("(2).(3).%dThreads 連續記憶體存取版本\n", THREAD_NUM);
-		ArrayCompute_multiple_threads_continuous_access();
-		printf("(4).%dThreads %dBlocks 連續記憶體存取版本\n", THREAD_NUM, BLOCK_NUM);
-		ArrayCompute_multiple_threads_blocks_continuous_access();
-		printf("(5).Shared Memory %dThreads %dBlocks 連續記憶體存取版本\n", THREAD_NUM, BLOCK_NUM);
-		ArrayCompute_shared_multiple_threads_blocks_continuous_access();
-		printf("(6).TreeSum alg. Shared Memory %dThreads %dBlocks 連續記憶體存取版本\n", THREAD_NUM, BLOCK_NUM);
-		ArrayCompute_shared_multiple_threads_blocks_continuous_access_treesum();
-		printf("(7).改良TreeSum alg. Shared Memory %dThreads %dBlocks 連續記憶體存取版本\n", THREAD_NUM, BLOCK_NUM);
-		ArrayCompute_shared_multiple_threads_blocks_continuous_access_better_treesum();
+
+		if (InitCUDA())
+		{
+			ArrayCompute();
+			printf("(1).%dThreads改良版本\n", THREAD_NUM);
+			ArrayCompute_multiple_threads();
+			printf("(2).(3).%dThreads 連續記憶體存取版本\n", THREAD_NUM);
+			ArrayCompute_multiple_threads_continuous_access();
+			printf("(4).%dThreads %dBlocks 連續記憶體存取版本\n", THREAD_NUM, BLOCK_NUM);
+			ArrayCompute_multiple_threads_blocks_continuous_access();
+			printf("(5).Shared Memory %dThreads %dBlocks 連續記憶體存取版本\n", THREAD_NUM, BLOCK_NUM);
+			ArrayCompute_shared_multiple_threads_blocks_continuous_access();
+			printf("(6).TreeSum alg. Shared Memory %dThreads %dBlocks 連續記憶體存取版本\n", THREAD_NUM, BLOCK_NUM);
+			ArrayCompute_shared_multiple_threads_blocks_continuous_access_treesum();
+			printf("(7).改良TreeSum alg. Shared Memory %dThreads %dBlocks 連續記憶體存取版本\n", THREAD_NUM, BLOCK_NUM);
+			ArrayCompute_shared_multiple_threads_blocks_continuous_access_better_treesum();
+		}
+
+		printf("\nDone!");
+		getchar();
+		return 0;
+	}
+	else
+	{
+		/*
+		 * 讓副執行續去啟動exe效果比直接用system()好，估計是因為直接用主執行續連續啟動應用程式的關係，負荷量過重了。
+		 * 這是我的猜測。
+		 */
+		CMD = "cd ..\\Multi_Window_Display && start CUDA.exe && start CUDA_m_t.exe && start CUDA_m_t_c_a_(256).exe && start CUDA_m_t_c_a_(512).exe && start CUDA_m_t_b_c_a.exe && start CUDA_s_m_t_b_c_a.exe && start CUDA_s_m_t_b_c_a_t.exe && start CUDA_s_m_t_b_c_a_b_t.exe";
+		std::thread thread(func_cmd);
+		thread.join();
+		
+		return 0;
 	}
 	
+	
 
-	printf("\nDone!");
-	getchar();
-	return 0;
+	
 }
 
 bool InitCUDA()
