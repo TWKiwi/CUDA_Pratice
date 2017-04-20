@@ -55,7 +55,7 @@ int main()
 			ArrayCompute();
 			printf("(1).%dThreads改良版本\n", THREAD_NUM);
 			ArrayCompute_multiple_threads();
-			printf("(2).(3).%dThreads 連續記憶體存取版本\n", THREAD_NUM);
+			printf("(2)(3).%dThreads 連續記憶體存取版本\n", THREAD_NUM);
 			ArrayCompute_multiple_threads_continuous_access();
 			printf("(4).%dThreads %dBlocks 連續記憶體存取版本\n", THREAD_NUM, BLOCK_NUM);
 			ArrayCompute_multiple_threads_blocks_continuous_access();
@@ -118,7 +118,7 @@ bool InitCUDA()
 				printf("--每個Multiprocessors裡最大執行續數量:%d\n", prop.maxThreadsPerMultiProcessor);
 				printf("--每個Block裡最大執行緒數量:%d\n", prop.maxThreadsPerBlock);
 				printf("--GPU 最大時脈: %.0f MHz (%0.2f GHz)\n", prop.clockRate * 1e-3f, prop.clockRate * 1e-6f);
-
+				printf("--最大記憶體時脈: %.0f Mhz (%0.2f GHz)\n", prop.memoryClockRate * 1e-3f, prop.memoryClockRate * 1e-6f);
 				break;
 			}
 		}
@@ -151,26 +151,32 @@ void ArrayCompute()
 
 
 	//-----------------------------------------------
-	cudaEvent_t beginEvent;
-	cudaEvent_t endEvent;
-	cudaEventCreate(&beginEvent);
-	cudaEventCreate(&endEvent);
-	cudaEventRecord(beginEvent, 0);
+	
 	GenerateNumbers(data, DATA_SIZE);
 	int* gpudata, *result;
 	cudaMalloc((void**)&gpudata, sizeof(int)* DATA_SIZE);
 	cudaMalloc((void**)&result, sizeof(int));
 	cudaMemcpy(gpudata, data, sizeof(int)* DATA_SIZE, cudaMemcpyHostToDevice);
+
+	cudaEvent_t beginEvent;
+	cudaEvent_t endEvent;
+	cudaEventCreate(&beginEvent);
+	cudaEventCreate(&endEvent);
+	cudaEventRecord(beginEvent, 0);
+
 	sumOfSquares << <1, 1, 0 >> >(gpudata, result);
-	int sum;
-	cudaMemcpy(&sum, result, sizeof(int), cudaMemcpyDeviceToHost);
-	cudaFree(gpudata);
-	cudaFree(result);
+
 	cudaEventRecord(endEvent, 0);
 	cudaEventSynchronize(endEvent);
 	cudaEventElapsedTime(&timeValue, beginEvent, endEvent);
 	cudaEventDestroy(beginEvent);
 	cudaEventDestroy(endEvent);
+
+	int sum;
+	cudaMemcpy(&sum, result, sizeof(int), cudaMemcpyDeviceToHost);
+	cudaFree(gpudata);
+	cudaFree(result);
+	
 	printf("--sum (GPU): %d\n", sum);
 	printf("--執行時間 (GPU): %f\n", float(timeValue) / CLOCKS_PER_SEC);
 	//-----------------------------------------------
@@ -193,24 +199,27 @@ void ArrayCompute_multiple_threads()
 	float timeValue;
 	//-----------------------------------------------
 	int* gpudata, *result;
-	cudaEvent_t beginEvent;
-	cudaEvent_t endEvent;
-	cudaEventCreate(&beginEvent);
-	cudaEventCreate(&endEvent);
-	cudaEventRecord(beginEvent, 0);
+	
 	GenerateNumbers(data, DATA_SIZE);
 	cudaMalloc((void**)&gpudata, sizeof(int)* DATA_SIZE);
 	cudaMalloc((void**)&result, sizeof(int)* THREAD_NUM);
 	cudaMemcpy(gpudata, data, sizeof(int)* DATA_SIZE, cudaMemcpyHostToDevice);
 
+	cudaEvent_t beginEvent;
+	cudaEvent_t endEvent;
+	cudaEventCreate(&beginEvent);
+	cudaEventCreate(&endEvent);
+	cudaEventRecord(beginEvent, 0);
+
 	sumOfSquares_multiple_threads << <1, THREAD_NUM, 0 >> >(gpudata, result);
 
-	int sum[THREAD_NUM];
 	cudaEventRecord(endEvent, 0);
 	cudaEventSynchronize(endEvent);
 	cudaEventElapsedTime(&timeValue, beginEvent, endEvent);
 	cudaEventDestroy(beginEvent);
 	cudaEventDestroy(endEvent);
+
+	int sum[THREAD_NUM];
 	cudaMemcpy(&sum, result, sizeof(int)* THREAD_NUM, cudaMemcpyDeviceToHost);
 	cudaFree(gpudata);
 	cudaFree(result);
@@ -236,24 +245,27 @@ void ArrayCompute_multiple_threads_continuous_access()
 	float timeValue;
 	//-----------------------------------------------
 	int* gpudata, *result;
-	cudaEvent_t beginEvent;
-	cudaEvent_t endEvent;
-	cudaEventCreate(&beginEvent);
-	cudaEventCreate(&endEvent);
-	cudaEventRecord(beginEvent, 0);
+	
 	GenerateNumbers(data, DATA_SIZE);
 	cudaMalloc((void**)&gpudata, sizeof(int)* DATA_SIZE);
 	cudaMalloc((void**)&result, sizeof(int)* THREAD_NUM);
 	cudaMemcpy(gpudata, data, sizeof(int)* DATA_SIZE, cudaMemcpyHostToDevice);
 
+	cudaEvent_t beginEvent;
+	cudaEvent_t endEvent;
+	cudaEventCreate(&beginEvent);
+	cudaEventCreate(&endEvent);
+	cudaEventRecord(beginEvent, 0);
+
 	sumOfSquares_multiple_threads_continuous_access << <1, THREAD_NUM, 0 >> >(gpudata, result);
 
-	int sum[THREAD_NUM];
 	cudaEventRecord(endEvent, 0);
 	cudaEventSynchronize(endEvent);
 	cudaEventElapsedTime(&timeValue, beginEvent, endEvent);
 	cudaEventDestroy(beginEvent);
 	cudaEventDestroy(endEvent);
+
+	int sum[THREAD_NUM];
 	cudaMemcpy(&sum, result, sizeof(int)* THREAD_NUM, cudaMemcpyDeviceToHost);
 	cudaFree(gpudata);
 	cudaFree(result);
@@ -280,22 +292,27 @@ void ArrayCompute_multiple_threads_blocks_continuous_access()
 	float timeValue;
 	//-----------------------------------------------
 	int* gpudata, *result;
+	
+	GenerateNumbers(data, DATA_SIZE);
+	cudaMalloc((void**)&gpudata, sizeof(int)* DATA_SIZE);
+	cudaMalloc((void**)&result, sizeof(int)* THREAD_NUM * BLOCK_NUM);
+	cudaMemcpy(gpudata, data, sizeof(int)* DATA_SIZE, cudaMemcpyHostToDevice);
+
 	cudaEvent_t beginEvent;
 	cudaEvent_t endEvent;
 	cudaEventCreate(&beginEvent);
 	cudaEventCreate(&endEvent);
 	cudaEventRecord(beginEvent, 0);
-	GenerateNumbers(data, DATA_SIZE);
-	cudaMalloc((void**)&gpudata, sizeof(int)* DATA_SIZE);
-	cudaMalloc((void**)&result, sizeof(int)* THREAD_NUM * BLOCK_NUM);
-	cudaMemcpy(gpudata, data, sizeof(int)* DATA_SIZE, cudaMemcpyHostToDevice);
+
 	sumOfSquares_multiple_threads_blocks_continuous_access << <BLOCK_NUM, THREAD_NUM, 0 >> >(gpudata, result);
-	int sum[THREAD_NUM * BLOCK_NUM];
+	
 	cudaEventRecord(endEvent, 0);
 	cudaEventSynchronize(endEvent);
 	cudaEventElapsedTime(&timeValue, beginEvent, endEvent);
 	cudaEventDestroy(beginEvent);
 	cudaEventDestroy(endEvent);
+
+	int sum[THREAD_NUM * BLOCK_NUM];
 	cudaMemcpy(&sum, result, sizeof(int)* THREAD_NUM * BLOCK_NUM, cudaMemcpyDeviceToHost);
 	cudaFree(gpudata);
 	cudaFree(result);
@@ -322,22 +339,27 @@ void ArrayCompute_shared_multiple_threads_blocks_continuous_access()
 	float timeValue;
 	//-----------------------------------------------
 	int* gpudata, *result;
+	
+	GenerateNumbers(data, DATA_SIZE);
+	cudaMalloc((void**)&gpudata, sizeof(int)* DATA_SIZE);
+	cudaMalloc((void**)&result, sizeof(int)* THREAD_NUM * BLOCK_NUM);
+	cudaMemcpy(gpudata, data, sizeof(int)* DATA_SIZE, cudaMemcpyHostToDevice);
+
 	cudaEvent_t beginEvent;
 	cudaEvent_t endEvent;
 	cudaEventCreate(&beginEvent);
 	cudaEventCreate(&endEvent);
 	cudaEventRecord(beginEvent, 0);
-	GenerateNumbers(data, DATA_SIZE);
-	cudaMalloc((void**)&gpudata, sizeof(int)* DATA_SIZE);
-	cudaMalloc((void**)&result, sizeof(int)* THREAD_NUM * BLOCK_NUM);
-	cudaMemcpy(gpudata, data, sizeof(int)* DATA_SIZE, cudaMemcpyHostToDevice);
+
 	sumOfSquares_shared_multiple_threads_blocks_continuous_access << <BLOCK_NUM, THREAD_NUM, THREAD_NUM * sizeof(int) >> >(gpudata, result);
-	int sum[THREAD_NUM * BLOCK_NUM];
+	
 	cudaEventRecord(endEvent, 0);
 	cudaEventSynchronize(endEvent);
 	cudaEventElapsedTime(&timeValue, beginEvent, endEvent);
 	cudaEventDestroy(beginEvent);
 	cudaEventDestroy(endEvent);
+
+	int sum[THREAD_NUM * BLOCK_NUM];
 	cudaMemcpy(&sum, result, sizeof(int)* THREAD_NUM * BLOCK_NUM, cudaMemcpyDeviceToHost);
 	cudaFree(gpudata);
 	cudaFree(result);
@@ -365,22 +387,27 @@ void ArrayCompute_shared_multiple_threads_blocks_continuous_access_treesum()
 	float timeValue;
 	//-----------------------------------------------
 	int* gpudata, *result;
+	
+	GenerateNumbers(data, DATA_SIZE);
+	cudaMalloc((void**)&gpudata, sizeof(int)* DATA_SIZE);
+	cudaMalloc((void**)&result, sizeof(int)* THREAD_NUM * BLOCK_NUM);
+	cudaMemcpy(gpudata, data, sizeof(int)* DATA_SIZE, cudaMemcpyHostToDevice);
+
 	cudaEvent_t beginEvent;
 	cudaEvent_t endEvent;
 	cudaEventCreate(&beginEvent);
 	cudaEventCreate(&endEvent);
 	cudaEventRecord(beginEvent, 0);
-	GenerateNumbers(data, DATA_SIZE);
-	cudaMalloc((void**)&gpudata, sizeof(int)* DATA_SIZE);
-	cudaMalloc((void**)&result, sizeof(int)* THREAD_NUM * BLOCK_NUM);
-	cudaMemcpy(gpudata, data, sizeof(int)* DATA_SIZE, cudaMemcpyHostToDevice);
+
 	sumOfSquares_shared_multiple_threads_blocks_continuous_access_treesum << <BLOCK_NUM, THREAD_NUM, THREAD_NUM * sizeof(int) >> >(gpudata, result);
-	int sum[THREAD_NUM * BLOCK_NUM];
+	
 	cudaEventRecord(endEvent, 0);
 	cudaEventSynchronize(endEvent);
 	cudaEventElapsedTime(&timeValue, beginEvent, endEvent);
 	cudaEventDestroy(beginEvent);
 	cudaEventDestroy(endEvent);
+
+	int sum[THREAD_NUM * BLOCK_NUM];
 	cudaMemcpy(&sum, result, sizeof(int)* THREAD_NUM * BLOCK_NUM, cudaMemcpyDeviceToHost);
 	cudaFree(gpudata);
 	cudaFree(result);
@@ -408,22 +435,27 @@ void ArrayCompute_shared_multiple_threads_blocks_continuous_access_better_treesu
 	float timeValue;
 	//-----------------------------------------------
 	int* gpudata, *result;
+	
+	GenerateNumbers(data, DATA_SIZE);
+	cudaMalloc((void**)&gpudata, sizeof(int)* DATA_SIZE);
+	cudaMalloc((void**)&result, sizeof(int)* THREAD_NUM * BLOCK_NUM);
+	cudaMemcpy(gpudata, data, sizeof(int)* DATA_SIZE, cudaMemcpyHostToDevice);
+
 	cudaEvent_t beginEvent;
 	cudaEvent_t endEvent;
 	cudaEventCreate(&beginEvent);
 	cudaEventCreate(&endEvent);
 	cudaEventRecord(beginEvent, 0);
-	GenerateNumbers(data, DATA_SIZE);
-	cudaMalloc((void**)&gpudata, sizeof(int)* DATA_SIZE);
-	cudaMalloc((void**)&result, sizeof(int)* THREAD_NUM * BLOCK_NUM);
-	cudaMemcpy(gpudata, data, sizeof(int)* DATA_SIZE, cudaMemcpyHostToDevice);
+
 	sumOfSquares_shared_multiple_threads_blocks_continuous_access_better_treesum << <BLOCK_NUM, THREAD_NUM, THREAD_NUM * sizeof(int) >> >(gpudata, result);
-	int sum[THREAD_NUM * BLOCK_NUM];
+	
 	cudaEventRecord(endEvent, 0);
 	cudaEventSynchronize(endEvent);
 	cudaEventElapsedTime(&timeValue, beginEvent, endEvent);
 	cudaEventDestroy(beginEvent);
 	cudaEventDestroy(endEvent);
+
+	int sum[THREAD_NUM * BLOCK_NUM];
 	cudaMemcpy(&sum, result, sizeof(int)* THREAD_NUM * BLOCK_NUM, cudaMemcpyDeviceToHost);
 	cudaFree(gpudata);
 	cudaFree(result);
