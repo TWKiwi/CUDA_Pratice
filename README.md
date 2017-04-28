@@ -1,5 +1,7 @@
 # CUDA_Pratice
 初次CUDA實作。
+# Issues
+<p>I am not quite sure that the time is not considered the calculation of cudaMalloc, cudaMemcpy2D, cudaFree and so on, or simply consider the time-consuming calculation, such as: sumOfSquares function.</p>
 # BSD License
 <p>Copyright (c) 2017, TWKiwi team</p>
 <p>All rights reserved.</p>
