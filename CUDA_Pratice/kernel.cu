@@ -47,6 +47,8 @@ void FloatArrayMultiCompute_KSF_shared_pitch(int n);
 clock_t matmultCUDA_KSF_shared_pitch(const float* a, int lda, const float* b, int ldb, float* c, int ldc, int n);
 __global__ static void matMultCUDA_KSF_shared_pitch(const float* a, size_t lda, const float* b, size_t ldb, float* c, size_t ldc, int n);
 
+void inverse_matrix(int n);
+
 
 
 
@@ -101,6 +103,8 @@ int main()
 			FloatArrayMultiCompute_KSF(n);
 			printf("(3).KSF§ï¨} Shared Memory Pitch\n");
 			FloatArrayMultiCompute_KSF_shared_pitch(n);
+			printf("(4).¤Ï¯x°}\n");
+			inverse_matrix(3);
 			
 		}
 
@@ -1012,3 +1016,55 @@ __global__ static void matMultCUDA_KSF_shared_pitch(const float* a, size_t lda,c
 	}
 }
 
+/*
+ * ¤Ï¯x°}
+ */
+void inverse_matrix(int n)
+{
+	int i, j;
+	int* a = new int[n*n];
+	float determinant = 0;
+	printf("Find Inverse Of Matrix by Subham Mishra\n");
+	printf("Enter elements of n x n matrix:\n");
+	for (i = 0; i<n; i++)
+	{
+		for (j = 0; j<n; j++)
+		{
+			int num;
+			scanf("%d", &num);
+			a[i*j+j] = num;
+		}
+	}
+	printf("The entered matrix is:\n");
+	for (i = 0; i<n; i++)
+	{
+		for (j = 0; j<n; j++)
+		{
+			printf("%d\n", a[i*j + j]);
+		}
+		
+	}
+	for (i = 0; i<n; i++)
+	{
+		determinant = determinant + (a[0][i] * (a[1][(i + 1) % n] *
+			a[2][(i + 2) % n] - a[1][(i + 2) % n] * a[2][(i + 1) % n]));
+	}
+	if (determinant == 0)
+	{
+		printf("Inverse does not exist (Determinant=0).\n");
+	}
+	else
+	{
+		printf("Inverse of matrix is: \n");
+	}
+	for (i = 0; i<n; i++)
+	{
+		for (j = 0; j<n; j++)
+		{
+			printf("%f\t", (float)(a[(i + 1) % n][(j + 1) % n] *
+				a[(i + 2) % n][(j + 2) % n]) - (a[(i + 1) % n][(j + 2) % n] *
+				a[(i + 2) % n][(j + 1) % n]) / determinant);
+		}
+		printf("\n");
+	}
+}
