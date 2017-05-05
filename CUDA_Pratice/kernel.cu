@@ -740,6 +740,7 @@ void compare_mat(const float* a, int lda, const float* b, int ldb, int n)
 void FloatArrayMultiCompute(int n)
 {
 	float *a, *b, *c, *d;
+	float cpu_time_use_per_sec = 0.0;
 	a = (float*)malloc(sizeof(float)* n * n);
 	b = (float*)malloc(sizeof(float)* n * n);
 	c = (float*)malloc(sizeof(float)* n * n);
@@ -748,10 +749,13 @@ void FloatArrayMultiCompute(int n)
 	matgen(a, n, n);
 	matgen(b, n, n);
 	clock_t time = matmultCUDA(a, n, b, n, c, n, n);
+	clock_t cpu_time_start = clock();//CPU計時開始
 	matmult(a, n, b, n, d, n, n);
+	cpu_time_use_per_sec = (float)(clock() - cpu_time_start) / CLOCKS_PER_SEC;//CPU計時結束並結算
 	compare_mat(c, n, d, n, n);
 	double sec = (double)time / CLOCKS_PER_SEC;
-	printf("Time used: %f (%f GFLOPS)\n", sec, 2.0 * n * n * n / (sec * 1E9));
+	printf("CPU Time used: %f\n", cpu_time_use_per_sec);
+	printf("GPU Time used: %f (%f GFLOPS)\n", sec, 2.0 * n * n * n / (sec * 1E9));
 }
 
 /*
@@ -1007,3 +1011,4 @@ __global__ static void matMultCUDA_KSF_shared_pitch(const float* a, size_t lda,c
 		c[row * ldc + j] = t;
 	}
 }
+
