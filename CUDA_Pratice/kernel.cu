@@ -47,7 +47,10 @@ void FloatArrayMultiCompute_KSF_shared_pitch(int n);
 clock_t matmultCUDA_KSF_shared_pitch(const float* a, int lda, const float* b, int ldb, float* c, int ldc, int n);
 __global__ static void matMultCUDA_KSF_shared_pitch(const float* a, size_t lda, const float* b, size_t ldb, float* c, size_t ldc, int n);
 
-void inverse_matrix(int n);
+void inverse_matrix();
+float determinant(float a[25][25], float k);
+void cofactor(float num[25][25], float f);
+void transpose(float num[25][25], float fac[25][25], float r);
 
 
 
@@ -104,7 +107,7 @@ int main()
 			printf("(3).KSF改良 Shared Memory Pitch\n");
 			FloatArrayMultiCompute_KSF_shared_pitch(n);
 			printf("(4).反矩陣\n");
-			inverse_matrix(3);
+			inverse_matrix();
 			
 		}
 
@@ -1018,53 +1021,135 @@ __global__ static void matMultCUDA_KSF_shared_pitch(const float* a, size_t lda,c
 
 /*
  * 反矩陣
+ * http://www.ccodechamp.com/c-program-to-find-inverse-of-matrix/
  */
-void inverse_matrix(int n)
+void inverse_matrix()
 {
+	float a[25][25], k, d;
 	int i, j;
-	int* a = new int[n*n];
-	float determinant = 0;
-	printf("Find Inverse Of Matrix by Subham Mishra\n");
-	printf("Enter elements of n x n matrix:\n");
-	for (i = 0; i<n; i++)
+	printf("輸入矩陣大小 : ");
+	scanf("%f", &k);
+	printf("輸入值到 %.0f x %.0f 矩陣 : \n", k, k);
+	for (i = 0; i<k; i++)
 	{
-		for (j = 0; j<n; j++)
+		for (j = 0; j<k; j++)
 		{
-			int num;
-			scanf("%d", &num);
-			a[i*j+j] = num;
+			scanf("%f", &a[i][j]);
 		}
 	}
-	printf("The entered matrix is:\n");
-	for (i = 0; i<n; i++)
+	d = determinant(a, k);
+	printf("行列式值 = %f\n", d);
+	if (d == 0)
+		printf("輸入值有誤，無法求得反矩陣\n");
+	else
+		cofactor(a, k);
+}
+
+float determinant(float a[25][25], float k)
+{
+	float s = 1, det = 0, b[25][25];
+	int i, j, m, n, c;
+	if (k == 1)
 	{
-		for (j = 0; j<n; j++)
-		{
-			printf("%d\n", a[i*j + j]);
-		}
-		
-	}
-	for (i = 0; i<n; i++)
-	{
-		determinant = determinant + (a[0][i] * (a[1][(i + 1) % n] *
-			a[2][(i + 2) % n] - a[1][(i + 2) % n] * a[2][(i + 1) % n]));
-	}
-	if (determinant == 0)
-	{
-		printf("Inverse does not exist (Determinant=0).\n");
+		return (a[0][0]);
 	}
 	else
 	{
-		printf("Inverse of matrix is: \n");
-	}
-	for (i = 0; i<n; i++)
-	{
-		for (j = 0; j<n; j++)
+		det = 0;
+		for (c = 0; c<k; c++)
 		{
-			printf("%f\t", (float)(a[(i + 1) % n][(j + 1) % n] *
-				a[(i + 2) % n][(j + 2) % n]) - (a[(i + 1) % n][(j + 2) % n] *
-				a[(i + 2) % n][(j + 1) % n]) / determinant);
+			m = 0;
+			n = 0;
+			for (i = 0; i<k; i++)
+			{
+				for (j = 0; j<k; j++)
+				{
+					b[i][j] = 0;
+					if (i != 0 && j != c)
+					{
+						b[m][n] = a[i][j];
+						if (n<(k - 2))
+							n++;
+						else
+						{
+							n = 0;
+							m++;
+						}
+					}
+				}
+			}
+			det = det + s * (a[0][c] * determinant(b, k - 1));
+			s = -1 * s;
 		}
-		printf("\n");
 	}
+
+	return (det);
+}
+
+void cofactor(float num[25][25], float f)
+{
+	float b[25][25], fac[25][25];
+	int p, q, m, n, i, j;
+	for (q = 0; q<f; q++)
+	{
+		for (p = 0; p<f; p++)
+		{
+			m = 0;
+			n = 0;
+			for (i = 0; i<f; i++)
+			{
+				for (j = 0; j<f; j++)
+				{
+					if (i != q && j != p)
+					{
+						b[m][n] = num[i][j];
+						if (n<(f - 2))
+							n++;
+						else
+						{
+							n = 0;
+							m++;
+						}
+					}
+				}
+			}
+			fac[q][p] = pow(-1, q + p) * determinant(b, f - 1);
+		}
+	}
+	transpose(num, fac, f);
+}
+/*求反矩陣*/
+void transpose(float num[25][25], float fac[25][25], float r)
+{
+	int i, j;
+	float b[25][25], inverse[25][25], d;
+
+	for (i = 0; i<r; i++)
+	{
+		for (j = 0; j<r; j++)
+		{
+			b[i][j] = fac[j][i];
+		}
+	}
+	d = determinant(num, r);
+	for (i = 0; i<r; i++)
+	{
+		for (j = 0; j<r; j++)
+		{
+			inverse[i][j] = b[i][j] / d;
+		}
+	}
+	printf("反矩陣為 : \n");
+
+	for (i = 0; i<r; i++)
+	{
+		for (j = 0; j<r; j++)
+		{
+			printf("\t%f", inverse[i][j]);
+		}
+	}
+
+	printf("驗證反矩陣: \n");
+
+
 }
