@@ -51,7 +51,12 @@ void inverse_matrix();
 float determinant(float a[25][25], float k);
 void cofactor(float num[25][25], float f);
 void transpose(float num[25][25], float fac[25][25], float r);
-double dot_product(double v[], double u[]);
+
+void inverse_matrix();
+void inverse_matrix_CPU(float a[25][25], float k);
+void inverse_matrix_GPU(float a[25][25], float k);
+float determinant_for_GPU(float a[25][25], int k);
+__global__ static void matrixGE(float* M, size_t K);
 
 
 
@@ -100,7 +105,7 @@ int main()
 			printf("/////////浮點數的矩陣乘法//////////\n");
 			int n = 0;
 			printf("輸入矩陣大小(一個正整數):");
-			scanf_s("%d", &n);
+			scanf_s(" %d", &n);
 			printf("(1).一般版本\n");
 			FloatArrayMultiCompute(n);
 			printf("(2).Kahan'sSummation Formula改良\n");
@@ -109,6 +114,7 @@ int main()
 			FloatArrayMultiCompute_KSF_shared_pitch(n);
 			printf("(4).反矩陣\n");
 			inverse_matrix();
+
 			
 		}
 
@@ -1020,26 +1026,69 @@ __global__ static void matMultCUDA_KSF_shared_pitch(const float* a, size_t lda,c
 	}
 }
 
-/*
- * 反矩陣
- * http://www.ccodechamp.com/c-program-to-find-inverse-of-matrix/
- */
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////                                        //////////////////////////////////////////
+/////////////////////////////////////                  反矩陣                //////////////////////////////////////////
+/////////////////////////////////////                                        //////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void inverse_matrix()
 {
-	float a[25][25], k, d;
+	float a[25][25], k;
 	int i, j;
-	printf("輸入矩陣大小 : ");
-	scanf("%f", &k);
-	printf("輸入值到 %.0f x %.0f 矩陣 : \n", k, k);
+	char ans;
+	printf("\n輸入矩陣大小 : ");
+	scanf(" %f", &k);
+	printf("\n值是否亂數產生?(y|n) : ");
+	scanf(" %c", &ans);
+	if (ans == 'y')
+	{
+		for (i = 0; i < k; i++) {
+			for (j = 0; j < k; j++) {
+				a[i][j] = (int)rand()%100;
+			}
+		}
+	}
+	else if (ans == 'n')
+	{
+		printf("\n輸入值到 %.0f x %.0f 矩陣 : \n", k, k);
+		for (i = 0; i<k; i++)
+		{
+			for (j = 0; j<k; j++)
+			{
+				scanf(" %f", &a[i][j]);
+			}
+		}
+	}
+	else
+	{
+		inverse_matrix();
+	}
+	printf("輸入矩陣為:\n");
 	for (i = 0; i<k; i++)
 	{
 		for (j = 0; j<k; j++)
 		{
-			scanf("%f", &a[i][j]);
+			printf("\t%f", a[i][j]);
 		}
+		printf("\n");
 	}
+
+
+	inverse_matrix_CPU(a, k);
+	inverse_matrix_GPU(a, k);
+}
+
+/*
+* 反矩陣
+* http://www.ccodechamp.com/c-program-to-find-inverse-of-matrix/
+*/
+void inverse_matrix_CPU(float a[25][25],float k)
+{
+	float d;
+	
+	clock_t determinant_start = clock_t();
 	d = determinant(a, k);
-	printf("行列式值 = %f\n", d);
+	printf("行列式值 = %f, 共耗時%f\n", d, (float)(clock_t() - determinant_start)/CLOCKS_PER_SEC);
 	if (d == 0)
 		printf("輸入值有誤，無法求得反矩陣\n");
 	else
@@ -1168,3 +1217,93 @@ void transpose(float num[25][25], float fac[25][25], float r)
 
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/*
+ * 反矩陣
+ * GPU
+ */
+void inverse_matrix_GPU(float a[25][25], float k)
+{
+	float timeValue;
+	float detA;
+
+	cudaEvent_t beginEvent;
+	cudaEvent_t endEvent;
+	cudaEventCreate(&beginEvent);
+	cudaEventCreate(&endEvent);
+	cudaEventRecord(beginEvent, 0);
+
+	detA = determinant_for_GPU(a,(int)k);
+
+	cudaEventRecord(endEvent, 0);
+	cudaEventSynchronize(endEvent);
+	cudaEventElapsedTime(&timeValue, beginEvent, endEvent);
+	cudaEventDestroy(beginEvent);
+	cudaEventDestroy(endEvent);
+
+	printf("GPU行列式值 = %f,共耗時:%f秒", detA, timeValue/CLOCKS_PER_SEC);
+}
+
+float determinant_for_GPU(float hA[25][25], int k)
+{
+	int i, j;
+	float *one_D_hA, *hU, *dA, size;
+	one_D_hA = (float*)malloc(sizeof(float)* k * k);
+	hU = (float*)malloc(sizeof(float)* k * k);
+	dA = (float*)malloc(sizeof(float)* k * k);
+	matgen(one_D_hA, k, k);
+	printf("輸入矩陣為:\n");
+	for (i = 0; i<k; i++)
+	{
+		for (j = 0; j<k; j++)
+		{
+			one_D_hA[i * k + j] = hA[i][j];
+			printf("\t%f", hA[i][j]);
+		}
+		printf("\n");
+	}
+
+	size = k*k*sizeof(float);
+	cudaMalloc((void**)&dA, size);
+	cudaMemcpy(dA, one_D_hA, size, cudaMemcpyHostToDevice);
+
+	matrixGE << < BLOCK_NUM, THREAD_NUM, sizeof(float)*k >> >(dA, k);
+
+	cudaThreadSynchronize();
+	cudaMemcpy(hU, dA, size, cudaMemcpyDeviceToHost);
+	cudaFree(dA);
+
+	float detA = 1.0;
+	for (int i = 0; i < k; ++i){
+		detA *= hU[i*k + i];
+	}
+
+	return detA;
+}
+
+__global__ static void matrixGE(float* M,size_t K)
+{
+	extern __shared__ float Mk[];
+
+	int i = blockIdx.x*blockDim.x + threadIdx.x;
+
+	if (i < K){
+		int n = K;
+
+		for (int k = 0; k < n - 1; ++k){
+			Mk[i] = M[k*n + i];
+			__syncthreads();
+
+			if (i >= k + 1){
+				float tmp = M[i*n + k] / Mk[k];
+
+				for (int j = k; j < n; ++j){
+					M[i*n + j] -= tmp*Mk[j];
+				}
+			}
+			__syncthreads();
+		}
+
+	}
+}
