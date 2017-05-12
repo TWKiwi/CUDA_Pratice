@@ -51,6 +51,7 @@ void inverse_matrix();
 float determinant(float a[25][25], float k);
 void cofactor(float num[25][25], float f);
 void transpose(float num[25][25], float fac[25][25], float r);
+double dot_product(double v[], double u[]);
 
 
 
@@ -1147,9 +1148,23 @@ void transpose(float num[25][25], float fac[25][25], float r)
 		{
 			printf("\t%f", inverse[i][j]);
 		}
+		printf("\n");
 	}
 
-	printf("驗證反矩陣: \n");
+	printf("\n驗證反矩陣: \n");
 
+	float C[25][25];
+	for (i = 0; i < r; i++) {
+		for (j = 0; j < r; j++) {
+			C[i][j] = 0; /*初始化陣列C */
+			for (int k = 0; k < r; k++) {
+				C[i][j] += num[i][k] * inverse[k][j]; /*陣列A乘上陣列B,存入陣列C */
+				//printf("\nC[%d][%d]num:%f inverse:%f = %f ", i, k, num[i][k], inverse[k][j], C[i][j]); /*輸出陣列C */
+			}
+			printf("\t%f", C[i][j]);
+		}
+		printf("\n");
+	}
 
 }
+
