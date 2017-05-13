@@ -2,12 +2,19 @@
 #include "device_launch_parameters.h"
 
 #include <stdio.h>
-#include <cstdlib>
-#include <ctime>
 #include <ostream>
-#include <iostream>
 #include <thread>
-#include <string>
+#include <fstream>
+#pragma comment(lib, "cuda.lib")
+#pragma comment(lib, "cudart.lib")
+#include <cuda.h>
+#include <math.h>
+#include <cuda_runtime_api.h>
+#include <iostream>
+
+using namespace std;
+
+
 #define DATA_SIZE 1048576
 #define BLOCK_NUM 32
 #define THREAD_NUM 256
@@ -49,14 +56,12 @@ __global__ static void matMultCUDA_KSF_shared_pitch(const float* a, size_t lda, 
 
 void inverse_matrix();
 float determinant(float a[25][25], float k);
-void cofactor(float num[25][25], float f);
-void transpose(float num[25][25], float fac[25][25], float r);
+void cofactor(float num[25][25], float f, float *inverse);
+void transpose(float num[25][25], float fac[25][25], float r, float *inverse);
 
 void inverse_matrix();
 void inverse_matrix_CPU(float a[25][25], float k);
-void inverse_matrix_GPU(float a[25][25], float k);
-float determinant_for_GPU(float a[25][25], int k);
-__global__ static void matrixGE(float* M, size_t K);
+void inverse_matrix_GPU(const int n);
 
 
 
@@ -1075,8 +1080,11 @@ void inverse_matrix()
 
 
 	inverse_matrix_CPU(a, k);
-	inverse_matrix_GPU(a, k);
+	inverse_matrix_GPU(k);
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////開始實作做CPU反矩陣///////////////////////////////////////////////////
 
 /*
 * 反矩陣
@@ -1084,15 +1092,41 @@ void inverse_matrix()
 */
 void inverse_matrix_CPU(float a[25][25],float k)
 {
+	printf("\n//////////////////////////////////////////////////////////////////\n");
+	printf("\n/////////////////////////CPU反矩陣開始////////////////////////////\n");
 	float d;
-	
-	clock_t determinant_start = clock_t();
+	float* inverse = (float*)malloc(sizeof(float)* k * k);;
+	clock_t determinant_start = clock();
 	d = determinant(a, k);
-	printf("行列式值 = %f, 共耗時%f\n", d, (float)(clock_t() - determinant_start)/CLOCKS_PER_SEC);
+	
 	if (d == 0)
+	{
 		printf("輸入值有誤，無法求得反矩陣\n");
+		printf("行列式值 = %f, 共耗時%f\n", d, (float)(clock() - determinant_start) / CLOCKS_PER_SEC);
+	}
 	else
-		cofactor(a, k);
+	{
+		cofactor(a, k, inverse);
+		printf("行列式值 = %f, 共耗時%f\n", d, (float)(clock() - determinant_start) / CLOCKS_PER_SEC);
+
+		printf("\n驗證反矩陣: \n");
+
+		float C[25][25];
+		for (int i = 0; i < k; i++) {
+			for (int j = 0; j < k; j++) {
+				C[i][j] = 0; /*初始化陣列C */
+				for (int k_i = 0; k_i < (int)k; k_i++) {
+					size_t index = k_i*(int)k + j;
+					C[i][j] += a[i][k_i] * inverse[index]; /*陣列A乘上陣列B,存入陣列C */
+					//printf("\na[%d][%d]:%f inverse[%d]:%f", i, k_i, a[i][k_i], index, inverse[index]); /*輸出陣列C */
+				}
+				printf("\t%f", C[i][j]);
+			}
+			printf("\n");
+		}
+	}
+		
+	
 }
 
 float determinant(float a[25][25], float k)
@@ -1136,7 +1170,7 @@ float determinant(float a[25][25], float k)
 	return (det);
 }
 
-void cofactor(float num[25][25], float f)
+void cofactor(float num[25][25], float f, float *inverse)
 {
 	float b[25][25], fac[25][25];
 	int p, q, m, n, i, j;
@@ -1166,13 +1200,13 @@ void cofactor(float num[25][25], float f)
 			fac[q][p] = pow(-1, q + p) * determinant(b, f - 1);
 		}
 	}
-	transpose(num, fac, f);
+	transpose(num, fac, f, inverse);
 }
 /*求反矩陣*/
-void transpose(float num[25][25], float fac[25][25], float r)
+void transpose(float num[25][25], float fac[25][25], float r, float *inverse)
 {
 	int i, j;
-	float b[25][25], inverse[25][25], d;
+	float b[25][25], d;
 
 	for (i = 0; i<r; i++)
 	{
@@ -1186,7 +1220,7 @@ void transpose(float num[25][25], float fac[25][25], float r)
 	{
 		for (j = 0; j<r; j++)
 		{
-			inverse[i][j] = b[i][j] / d;
+			inverse[i*(int)r+j] = b[i][j] / d;
 		}
 	}
 	printf("反矩陣為 : \n");
@@ -1195,115 +1229,202 @@ void transpose(float num[25][25], float fac[25][25], float r)
 	{
 		for (j = 0; j<r; j++)
 		{
-			printf("\t%f", inverse[i][j]);
+			printf("\t%f", inverse[i*(int)r+j]);
 		}
 		printf("\n");
 	}
-
-	printf("\n驗證反矩陣: \n");
-
-	float C[25][25];
-	for (i = 0; i < r; i++) {
-		for (j = 0; j < r; j++) {
-			C[i][j] = 0; /*初始化陣列C */
-			for (int k = 0; k < r; k++) {
-				C[i][j] += num[i][k] * inverse[k][j]; /*陣列A乘上陣列B,存入陣列C */
-				//printf("\nC[%d][%d]num:%f inverse:%f = %f ", i, k, num[i][k], inverse[k][j], C[i][j]); /*輸出陣列C */
-			}
-			printf("\t%f", C[i][j]);
-		}
-		printf("\n");
-	}
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+//////////////////////////////////////////////////開始實作做GPU反矩陣///////////////////////////////////////////////////
 /*
- * 反矩陣
- * GPU
+ * 修改自
+ * https://github.com/ZhengzhongSun/Matrix-Inversion-with-CUDA
  */
-void inverse_matrix_GPU(float a[25][25], float k)
-{
-	float timeValue;
-	float detA;
-
-	cudaEvent_t beginEvent;
-	cudaEvent_t endEvent;
-	cudaEventCreate(&beginEvent);
-	cudaEventCreate(&endEvent);
-	cudaEventRecord(beginEvent, 0);
-
-	detA = determinant_for_GPU(a,(int)k);
-
-	cudaEventRecord(endEvent, 0);
-	cudaEventSynchronize(endEvent);
-	cudaEventElapsedTime(&timeValue, beginEvent, endEvent);
-	cudaEventDestroy(beginEvent);
-	cudaEventDestroy(endEvent);
-
-	printf("GPU行列式值 = %f,共耗時:%f秒", detA, timeValue/CLOCKS_PER_SEC);
+void matrix_gen(double *L, int dimension){
+	int row, col;
+	printf("\n\n\n生成亂數矩陣:\n");
+	for (row = 0; row < dimension; row++)
+	{
+		for (col = 0; col < dimension; col++)
+		{
+			double r = rand() % 100;
+			L[row * dimension + col] = r;
+			printf("\t%f", r);
+		}
+		printf("\n");
+	}
+	
 }
 
-float determinant_for_GPU(float hA[25][25], int k)
+__global__ void nodiag_normalize(double *A, double *I, int n, int i){
+	int x = blockIdx.x * blockDim.x + threadIdx.x;
+	int y = blockIdx.y * blockDim.y + threadIdx.y;
+
+	if (x < n && y < n)
+	if (x == i && x != y){
+		I[x*n + y] /= A[i*n + i];
+		A[x*n + y] /= A[i*n + i];
+	}
+
+}
+
+__global__ void diag_normalize(double *A, double *I, int n, int i){
+	int x = blockIdx.x * blockDim.x + threadIdx.x;
+	int y = blockIdx.y * blockDim.y + threadIdx.y;
+
+	if (x < n && y < n)
+	if (x == y && x == i){
+		I[x*n + y] /= A[i*n + i];
+		A[x*n + y] /= A[i*n + i];
+	}
+
+}
+
+__global__ void gaussjordan(double *A, double *I, int n, int i)
 {
-	int i, j;
-	float *one_D_hA, *hU, *dA, size;
-	one_D_hA = (float*)malloc(sizeof(float)* k * k);
-	hU = (float*)malloc(sizeof(float)* k * k);
-	dA = (float*)malloc(sizeof(float)* k * k);
-	matgen(one_D_hA, k, k);
-	printf("輸入矩陣為:\n");
-	for (i = 0; i<k; i++)
+	int x = blockIdx.x * blockDim.x + threadIdx.x;
+	int y = blockIdx.y * blockDim.y + threadIdx.y;
+
+	if (x < n && y < n){
+		if (x != i){
+			I[x*n + y] -= I[i*n + y] * A[x*n + i];
+			if (y != i){
+				A[x*n + y] -= A[i*n + y] * A[x*n + i];
+			}
+		}
+	}
+
+}
+
+__global__ void set_zero(double *A, double *I, int n, int i){
+	int x = blockIdx.x * blockDim.x + threadIdx.x;
+	int y = blockIdx.y * blockDim.y + threadIdx.y;
+
+	if (x < n && y < n){
+		if (x != i){
+			if (y == i){
+				A[x*n + y] = 0;
+			}
+		}
+	}
+}
+
+void savetofile(double *A, string s, int n, int h)
+{
+	std::ofstream plik;
+	plik.open(s);
+
+	for (int j = 0; j<h; j++){
+		for (int i = 0; i<h; i++){
+			plik << A[j*n + i] << "\t";
+		}
+		plik << endl;
+	}
+	plik.close();
+}
+
+/*
+ * GPU反矩陣
+ */
+void inverse_matrix_GPU(const int n)
+{
+	printf("\n//////////////////////////////////////////////////////////////////\n");
+	printf("\n/////////////////////////GPU反矩陣開始////////////////////////////\n");
+	// creating input
+	double *iL = new double[n*n];
+	double *L = new double[n*n];
+	matrix_gen(L, n);
+	//savetofile(L, "L.txt", n, n);
+
+	//cout << "inv\n";
+	double *d_A, *d_L, *I, *dI;
+	float time;
+	cudaError_t err;
+	cudaEvent_t start, stop;
+	cudaEventCreate(&start);
+	cudaEventCreate(&stop);
+	int ddsize = n*n*sizeof(double);
+
+	dim3 threadsPerBlock(BLOCK_NUM, BLOCK_NUM);
+	dim3 numBlocks((n + BLOCK_NUM - 1) / BLOCK_NUM, (n + BLOCK_NUM - 1) / BLOCK_NUM);
+	// memory allocation    
+	err = cudaMalloc((void**)&d_A, ddsize);
+	if (err != cudaSuccess){ cout << cudaGetErrorString(err) << " in " << __FILE__ << " at line " << __LINE__ << endl; }
+	err = cudaMalloc((void**)&dI, ddsize);
+	if (err != cudaSuccess){ cout << cudaGetErrorString(err) << " in " << __FILE__ << " at line " << __LINE__ << endl; }
+	I = new double[n*n];
+
+	for (int i = 0; i<n; i++){
+		for (int j = 0; j<n; j++){
+			if (i == j) I[i*n + i] = 1.0;
+			else I[i*n + j] = 0.0;
+		}
+	}
+
+	//copy data from CPU to GPU
+	err = cudaMemcpy(d_A, L, ddsize, cudaMemcpyHostToDevice);
+	if (err != cudaSuccess){ cout << cudaGetErrorString(err) << " in " << __FILE__ << " at line " << __LINE__ << endl; }
+	err = cudaMemcpy(dI, I, ddsize, cudaMemcpyHostToDevice);
+	if (err != cudaSuccess){ cout << cudaGetErrorString(err) << " in " << __FILE__ << " at line " << __LINE__ << endl; }
+
+	//timer start
+	cudaEventRecord(start, 0);
+
+	// L^(-1)    
+	for (int i = 0; i<n; i++){
+		nodiag_normalize << <numBlocks, threadsPerBlock >> >(d_A, dI, n, i);
+		diag_normalize << <numBlocks, threadsPerBlock >> >(d_A, dI, n, i);
+		gaussjordan << <numBlocks, threadsPerBlock >> >(d_A, dI, n, i);
+		set_zero << <numBlocks, threadsPerBlock >> >(d_A, dI, n, i);
+	}
+
+	cudaEventRecord(stop, 0);
+	cudaEventSynchronize(stop);
+	cudaEventElapsedTime(&time, start, stop);
+	cudaEventDestroy(start);
+	cudaEventDestroy(stop);
+
+	//copy data from GPU to CPU
+	err = cudaMemcpy(iL, dI, ddsize, cudaMemcpyDeviceToHost);
+	if (err != cudaSuccess){ cout << cudaGetErrorString(err) << " in " << __FILE__ << " at line " << __LINE__ << endl; }
+	err = cudaMemcpy(I, d_A, ddsize, cudaMemcpyDeviceToHost);
+	if (err != cudaSuccess){ cout << cudaGetErrorString(err) << " in " << __FILE__ << " at line " << __LINE__ << endl; }
+
+	
+
+	printf("反矩陣為:\n");
+	for (int i = 0; i<n; i++){
+		for (int j = 0; j<n; j++){
+			printf("\t%f", iL[i * n + j]);
+		}
+		printf("\n");
+	}
+	printf("GPU耗費時間: %f\n", time / CLOCKS_PER_SEC);
+
+	cudaFree(d_A);
+	cudaFree(dI);
+
+	double *c = new double[n*n];
+	for (int i = 0; i<n; i++)
+	for (int j = 0; j<n; j++)
 	{
-		for (j = 0; j<k; j++)
-		{
-			one_D_hA[i * k + j] = hA[i][j];
-			printf("\t%f", hA[i][j]);
+		c[i*n + j] = 0;  //put the initial value to zero
+		for (int x = 0; x<n; x++)
+			c[i*n + j] = c[i*n + j] + L[i*n + x] * iL[x*n + j];  //matrix multiplication
+	}
+
+	printf("驗證反矩陣:\n");
+	for (int i = 0; i<n; i++){
+		for (int j = 0; j<n; j++){
+			printf("\t%f", c[i * n + j]);
 		}
 		printf("\n");
 	}
 
-	size = k*k*sizeof(float);
-	cudaMalloc((void**)&dA, size);
-	cudaMemcpy(dA, one_D_hA, size, cudaMemcpyHostToDevice);
 
-	matrixGE << < BLOCK_NUM, THREAD_NUM, sizeof(float)*k >> >(dA, k);
+	delete[]I;
+	delete[]L;
+	delete[]iL;
 
-	cudaThreadSynchronize();
-	cudaMemcpy(hU, dA, size, cudaMemcpyDeviceToHost);
-	cudaFree(dA);
-
-	float detA = 1.0;
-	for (int i = 0; i < k; ++i){
-		detA *= hU[i*k + i];
-	}
-
-	return detA;
-}
-
-__global__ static void matrixGE(float* M,size_t K)
-{
-	extern __shared__ float Mk[];
-
-	int i = blockIdx.x*blockDim.x + threadIdx.x;
-
-	if (i < K){
-		int n = K;
-
-		for (int k = 0; k < n - 1; ++k){
-			Mk[i] = M[k*n + i];
-			__syncthreads();
-
-			if (i >= k + 1){
-				float tmp = M[i*n + k] / Mk[k];
-
-				for (int j = k; j < n; ++j){
-					M[i*n + j] -= tmp*Mk[j];
-				}
-			}
-			__syncthreads();
-		}
-
-	}
 }
