@@ -22,6 +22,10 @@ using namespace std;
 
 std::string CMD = "";
 int data[DATA_SIZE];
+float f_data[DATA_SIZE];
+float f_b_data[DATA_SIZE];
+float f_c_data[DATA_SIZE];
+float f_fac_data[DATA_SIZE];
 bool InitCUDA();
 void GenerateNumbers(int *number, int size);
 void matgen(float* a, int lda, int n);
@@ -55,13 +59,13 @@ clock_t matmultCUDA_KSF_shared_pitch(const float* a, int lda, const float* b, in
 __global__ static void matMultCUDA_KSF_shared_pitch(const float* a, size_t lda, const float* b, size_t ldb, float* c, size_t ldc, int n);
 
 void inverse_matrix();
-float determinant(float a[25][25], float k);
-void cofactor(float num[25][25], float f, float *inverse);
-void transpose(float num[25][25], float fac[25][25], float r, float *inverse);
+float determinant(float *a, int k);
+void cofactor(float *num, int f, float *inverse);
+void transpose(float *num, float *fac, int r, float *inverse);
 
 void inverse_matrix();
-void inverse_matrix_CPU(float a[25][25], float k);
-void inverse_matrix_GPU(const int n,char ans);
+void inverse_matrix_CPU(float *a, int k);
+void inverse_matrix_GPU(const int n, char ans);
 
 
 
@@ -120,7 +124,7 @@ int main()
 			printf("(4).反矩陣\n");
 			inverse_matrix();
 
-			
+
 		}
 
 		printf("\nDone!");
@@ -136,13 +140,13 @@ int main()
 		CMD = "cd ..\\Multi_Window_Display && start CUDA.exe && start CUDA_m_t.exe && start CUDA_m_t_c_a_(256).exe && start CUDA_m_t_c_a_(512).exe && start CUDA_m_t_b_c_a.exe && start CUDA_s_m_t_b_c_a.exe && start CUDA_s_m_t_b_c_a_t.exe && start CUDA_s_m_t_b_c_a_b_t.exe";
 		std::thread thread(func_cmd);
 		thread.join();
-		
+
 		return 0;
 	}
-	
-	
 
-	
+
+
+
 }
 
 
@@ -167,7 +171,7 @@ bool InitCUDA()
 	int i;
 	for (i = 0; i < count; i++)
 	{
-		
+
 		if (cudaGetDeviceProperties(&prop, i) == cudaSuccess)
 		{
 			if (prop.major >= 1)
@@ -227,7 +231,7 @@ void ArrayCompute()
 
 
 	//-----------------------------------------------
-	
+
 	GenerateNumbers(data, DATA_SIZE);
 	int* gpudata, *result;
 	cudaMalloc((void**)&gpudata, sizeof(int)* DATA_SIZE);
@@ -252,7 +256,7 @@ void ArrayCompute()
 	cudaMemcpy(&sum, result, sizeof(int), cudaMemcpyDeviceToHost);
 	cudaFree(gpudata);
 	cudaFree(result);
-	
+
 	printf("--sum (GPU): %d\n", sum);
 	printf("--執行時間 (GPU): %f\n", float(timeValue) / CLOCKS_PER_SEC);
 	//-----------------------------------------------
@@ -286,7 +290,7 @@ void ArrayCompute_multiple_threads()
 	float timeValue;
 	//-----------------------------------------------
 	int* gpudata, *result;
-	
+
 	GenerateNumbers(data, DATA_SIZE);
 	cudaMalloc((void**)&gpudata, sizeof(int)* DATA_SIZE);
 	cudaMalloc((void**)&result, sizeof(int)* THREAD_NUM);
@@ -317,7 +321,7 @@ void ArrayCompute_multiple_threads()
 	for (int i = 0; i < THREAD_NUM; i++) {
 		final_sum += sum[i];
 	}
-	float clock_cycle = prop.clockRate * 1e-3f * (float(timeValue) / CLOCKS_PER_SEC); 
+	float clock_cycle = prop.clockRate * 1e-3f * (float(timeValue) / CLOCKS_PER_SEC);
 	float memory_bandwidth = 4 / (float(timeValue) / CLOCKS_PER_SEC); // 只適用於32位元資料前提 (1024 * 1024 * 32(bit)) / 8(bit -> byte) * 1024(byte -> kb) * 1024(kb -> mb)
 	printf("--sum (GPU): %d\n", final_sum);
 	printf("--執行時間 (GPU): %f | 時脈: %fMHz | 記憶體頻寬:%f MB/s\n", float(timeValue) / CLOCKS_PER_SEC, clock_cycle, memory_bandwidth);
@@ -346,7 +350,7 @@ void ArrayCompute_multiple_threads_continuous_access()
 	float timeValue;
 	//-----------------------------------------------
 	int* gpudata, *result;
-	
+
 	GenerateNumbers(data, DATA_SIZE);
 	cudaMalloc((void**)&gpudata, sizeof(int)* DATA_SIZE);
 	cudaMalloc((void**)&result, sizeof(int)* THREAD_NUM);
@@ -402,11 +406,11 @@ __global__ static void sumOfSquares_multiple_threads_continuous_access(int *num,
 */
 void ArrayCompute_multiple_threads_blocks_continuous_access()
 {
-	
+
 	float timeValue;
 	//-----------------------------------------------
 	int* gpudata, *result;
-	
+
 	GenerateNumbers(data, DATA_SIZE);
 	cudaMalloc((void**)&gpudata, sizeof(int)* DATA_SIZE);
 	cudaMalloc((void**)&result, sizeof(int)* THREAD_NUM * BLOCK_NUM);
@@ -419,7 +423,7 @@ void ArrayCompute_multiple_threads_blocks_continuous_access()
 	cudaEventRecord(beginEvent, 0);
 
 	sumOfSquares_multiple_threads_blocks_continuous_access << <BLOCK_NUM, THREAD_NUM, 0 >> >(gpudata, result);
-	
+
 	cudaEventRecord(endEvent, 0);
 	cudaEventSynchronize(endEvent);
 	cudaEventElapsedTime(&timeValue, beginEvent, endEvent);
@@ -436,7 +440,7 @@ void ArrayCompute_multiple_threads_blocks_continuous_access()
 	for (int i = 0; i < THREAD_NUM * BLOCK_NUM; i++) {
 		final_sum += sum[i];
 	}
-	
+
 	float clock_cycle = prop.clockRate * 1e-3f * (float(timeValue) / CLOCKS_PER_SEC);
 	float memory_bandwidth = 4 / (float(timeValue) / CLOCKS_PER_SEC); // 只適用於32位元資料前提 (1024 * 1024 * 32(bit)) / 8(bit -> byte) * 1024(byte -> kb) * 1024(kb -> mb)
 	printf("--sum (GPU): %d\n", final_sum);
@@ -467,7 +471,7 @@ void ArrayCompute_shared_multiple_threads_blocks_continuous_access()
 	float timeValue;
 	//-----------------------------------------------
 	int* gpudata, *result;
-	
+
 	GenerateNumbers(data, DATA_SIZE);
 	cudaMalloc((void**)&gpudata, sizeof(int)* DATA_SIZE);
 	cudaMalloc((void**)&result, sizeof(int)* THREAD_NUM * BLOCK_NUM);
@@ -480,7 +484,7 @@ void ArrayCompute_shared_multiple_threads_blocks_continuous_access()
 	cudaEventRecord(beginEvent, 0);
 
 	sumOfSquares_shared_multiple_threads_blocks_continuous_access << <BLOCK_NUM, THREAD_NUM, THREAD_NUM * sizeof(int) >> >(gpudata, result);
-	
+
 	cudaEventRecord(endEvent, 0);
 	cudaEventSynchronize(endEvent);
 	cudaEventElapsedTime(&timeValue, beginEvent, endEvent);
@@ -540,7 +544,7 @@ void ArrayCompute_shared_multiple_threads_blocks_continuous_access_treesum()
 	float timeValue;
 	//-----------------------------------------------
 	int* gpudata, *result;
-	
+
 	GenerateNumbers(data, DATA_SIZE);
 	cudaMalloc((void**)&gpudata, sizeof(int)* DATA_SIZE);
 	cudaMalloc((void**)&result, sizeof(int)* THREAD_NUM * BLOCK_NUM);
@@ -553,7 +557,7 @@ void ArrayCompute_shared_multiple_threads_blocks_continuous_access_treesum()
 	cudaEventRecord(beginEvent, 0);
 
 	sumOfSquares_shared_multiple_threads_blocks_continuous_access_treesum << <BLOCK_NUM, THREAD_NUM, THREAD_NUM * sizeof(int) >> >(gpudata, result);
-	
+
 	cudaEventRecord(endEvent, 0);
 	cudaEventSynchronize(endEvent);
 	cudaEventElapsedTime(&timeValue, beginEvent, endEvent);
@@ -616,7 +620,7 @@ void ArrayCompute_shared_multiple_threads_blocks_continuous_access_better_treesu
 	float timeValue;
 	//-----------------------------------------------
 	int* gpudata, *result;
-	
+
 	GenerateNumbers(data, DATA_SIZE);
 	cudaMalloc((void**)&gpudata, sizeof(int)* DATA_SIZE);
 	cudaMalloc((void**)&result, sizeof(int)* THREAD_NUM * BLOCK_NUM);
@@ -629,7 +633,7 @@ void ArrayCompute_shared_multiple_threads_blocks_continuous_access_better_treesu
 	cudaEventRecord(beginEvent, 0);
 
 	sumOfSquares_shared_multiple_threads_blocks_continuous_access_better_treesum << <BLOCK_NUM, THREAD_NUM, THREAD_NUM * sizeof(int) >> >(gpudata, result);
-	
+
 	cudaEventRecord(endEvent, 0);
 	cudaEventSynchronize(endEvent);
 	cudaEventElapsedTime(&timeValue, beginEvent, endEvent);
@@ -817,7 +821,7 @@ clock_t matmultCUDA(const float* a, int lda, const float* b, int ldb, float* c, 
 /*
  * 矩陣相乘的Kernel函式
  */
-__global__ static void matMultCUDA(const float* a, size_t lda,const float* b, size_t ldb, float* c, size_t ldc, int n)
+__global__ static void matMultCUDA(const float* a, size_t lda, const float* b, size_t ldb, float* c, size_t ldc, int n)
 {
 	const int tid = threadIdx.x;
 	const int bid = blockIdx.x;
@@ -923,13 +927,13 @@ __global__ static void matMultCUDA_KSF(const float* a, size_t lda, const float* 
 		float sum = 0;
 		float z = 0;
 		for (i = 0; i < n; i++) {
-			float y = a[row * lda + i] * b[i * ldb + column] - z;
-			float t = sum + y;
-			z = (t - sum) - y;
-			sum += t;
+		float y = a[row * lda + i] * b[i * ldb + column] - z;
+		float t = sum + y;
+		z = (t - sum) - y;
+		sum += t;
 		}
 		c[row * ldc + column] = sum;
-	}*/
+		}*/
 }
 
 
@@ -978,12 +982,12 @@ clock_t matmultCUDA_KSF_shared_pitch(const float* a, int lda, const float* b, in
 	cudaMallocPitch((void**)&ac, &pitch_a, sizeof(float)* n, n);
 	cudaMallocPitch((void**)&bc, &pitch_b, sizeof(float)* n, n);
 	cudaMallocPitch((void**)&cc, &pitch_c, sizeof(float)* n, n);
-	cudaMemcpy2D(ac, pitch_a, a, sizeof(float)* lda,sizeof(float)* n, n, cudaMemcpyHostToDevice);
-	cudaMemcpy2D(bc, pitch_b, b, sizeof(float)* ldb,sizeof(float)* n, n, cudaMemcpyHostToDevice);
+	cudaMemcpy2D(ac, pitch_a, a, sizeof(float)* lda, sizeof(float)* n, n, cudaMemcpyHostToDevice);
+	cudaMemcpy2D(bc, pitch_b, b, sizeof(float)* ldb, sizeof(float)* n, n, cudaMemcpyHostToDevice);
 
 	int blocks = (n + THREAD_NUM - 1) / THREAD_NUM;
-	matMultCUDA_KSF_shared_pitch << <n, THREAD_NUM, sizeof(float)* n >> >(ac, pitch_a / sizeof(float), bc, pitch_b / sizeof(float),cc, pitch_c / sizeof(float), n);
-	cudaMemcpy2D(c, sizeof(float)* ldc, cc, pitch_c,sizeof(float)* n, n, cudaMemcpyDeviceToHost);
+	matMultCUDA_KSF_shared_pitch << <n, THREAD_NUM, sizeof(float)* n >> >(ac, pitch_a / sizeof(float), bc, pitch_b / sizeof(float), cc, pitch_c / sizeof(float), n);
+	cudaMemcpy2D(c, sizeof(float)* ldc, cc, pitch_c, sizeof(float)* n, n, cudaMemcpyDeviceToHost);
 	cudaFree(ac);
 	cudaFree(bc);
 	cudaFree(cc);
@@ -1004,7 +1008,7 @@ clock_t matmultCUDA_KSF_shared_pitch(const float* a, int lda, const float* b, in
 * Shared memory
 * Pitch
 */
-__global__ static void matMultCUDA_KSF_shared_pitch(const float* a, size_t lda,const float* b, size_t ldb, float* c, size_t ldc, int n)
+__global__ static void matMultCUDA_KSF_shared_pitch(const float* a, size_t lda, const float* b, size_t ldb, float* c, size_t ldc, int n)
 {
 	extern __shared__ float shared_data[];
 	const int tid = threadIdx.x;
@@ -1039,29 +1043,28 @@ __global__ static void matMultCUDA_KSF_shared_pitch(const float* a, size_t lda,c
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void inverse_matrix()
 {
-	float a[25][25], k;
-	int i, j;
+	int i, j, k;
 	char ans;
 	printf("\n輸入矩陣大小 : ");
-	scanf(" %f", &k);
+	scanf(" %d", &k);
 	printf("\n值是否亂數產生?(y|n) : ");
 	scanf(" %c", &ans);
 	if (ans == 'y')
 	{
 		for (i = 0; i < k; i++) {
 			for (j = 0; j < k; j++) {
-				a[i][j] = (int)rand()%100;
+				f_data[i * k + j] = (int)rand() % 100;
 			}
 		}
 	}
 	else if (ans == 'n')
 	{
-		printf("\n輸入值到 %.0f x %.0f 矩陣 : \n", k, k);
-		for (i = 0; i<k; i++)
+		printf("\n輸入值到 %d x %d 矩陣 : \n", k, k);
+		for (i = 0; i < k; i++)
 		{
-			for (j = 0; j<k; j++)
+			for (j = 0; j < k; j++)
 			{
-				scanf(" %f", &a[i][j]);
+				scanf(" %f", &f_data[i * k + j]);
 			}
 		}
 	}
@@ -1070,18 +1073,18 @@ void inverse_matrix()
 		inverse_matrix();
 	}
 	printf("輸入矩陣為:\n");
-	for (i = 0; i<k; i++)
+	for (i = 0; i < k; i++)
 	{
-		for (j = 0; j<k; j++)
+		for (j = 0; j < k; j++)
 		{
-			printf("\t%f", a[i][j]);
+			printf("\t%f", f_data[i * k + j]);
 		}
 		printf("\n");
 	}
 
-
-	inverse_matrix_CPU(a, k);
 	inverse_matrix_GPU(k, ans);
+	inverse_matrix_CPU(f_data, k);
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1091,7 +1094,7 @@ void inverse_matrix()
 * 反矩陣
 * http://www.ccodechamp.com/c-program-to-find-inverse-of-matrix/
 */
-void inverse_matrix_CPU(float a[25][25],float k)
+void inverse_matrix_CPU(float *a, int k)
 {
 	printf("\n//////////////////////////////////////////////////////////////////\n");
 	printf("\n/////////////////////////CPU反矩陣開始////////////////////////////\n");
@@ -1099,7 +1102,7 @@ void inverse_matrix_CPU(float a[25][25],float k)
 	float* inverse = (float*)malloc(sizeof(float)* k * k);;
 	clock_t determinant_start = clock();
 	d = determinant(a, k);
-	
+
 	if (d == 0)
 	{
 		printf("輸入值有誤，無法求得反矩陣\n");
@@ -1112,83 +1115,80 @@ void inverse_matrix_CPU(float a[25][25],float k)
 
 		printf("\n驗證反矩陣: \n");
 
-		float C[25][25];
 		for (int i = 0; i < k; i++) {
 			for (int j = 0; j < k; j++) {
-				C[i][j] = 0; /*初始化陣列C */
-				for (int k_i = 0; k_i < (int)k; k_i++) {
-					size_t index = k_i*(int)k + j;
-					C[i][j] += a[i][k_i] * inverse[index]; /*陣列A乘上陣列B,存入陣列C */
+				f_c_data[i*k + j] = 0; /*初始化陣列C */
+				for (int k_i = 0; k_i < k; k_i++) {
+					size_t index = k_i * k + j;
+					f_c_data[i*k + j] += a[i*k + k_i] * inverse[index]; /*陣列A乘上陣列B,存入陣列C */
 					//printf("\na[%d][%d]:%f inverse[%d]:%f", i, k_i, a[i][k_i], index, inverse[index]); /*輸出陣列C */
 				}
-				printf("\t%f", C[i][j]);
+				printf("\t%f", f_c_data[i*k + j]);
 			}
 			printf("\n");
 		}
 	}
-		
-	
+
+
 }
 
-float determinant(float a[25][25], float k)
+float determinant(float *a, int k)
 {
-	float s = 1, det = 0, b[25][25];
+	float s = 1, det = 0;
 	int i, j, m, n, c;
 	if (k == 1)
 	{
-		return (a[0][0]);
+		return (a[0]);
 	}
-	else
+
+	det = 0;
+	for (c = 0; c < k; c++)
 	{
-		det = 0;
-		for (c = 0; c<k; c++)
+		m = 0;
+		n = 0;
+		for (i = 0; i < k; i++)
 		{
-			m = 0;
-			n = 0;
-			for (i = 0; i<k; i++)
+			for (j = 0; j < k; j++)
 			{
-				for (j = 0; j<k; j++)
+				f_b_data[i*k + j] = 0;
+				if (i != 0 && j != c)
 				{
-					b[i][j] = 0;
-					if (i != 0 && j != c)
+					f_b_data[m*k + n] = a[i*k + j];
+					if (n < (k - 2))
+						n++;
+					else
 					{
-						b[m][n] = a[i][j];
-						if (n<(k - 2))
-							n++;
-						else
-						{
-							n = 0;
-							m++;
-						}
+						n = 0;
+						m++;
 					}
 				}
 			}
-			det = det + s * (a[0][c] * determinant(b, k - 1));
-			s = -1 * s;
 		}
+		det = det + s * (a[c] * determinant(f_b_data, k - 1));
+		s = -1 * s;
 	}
+
 
 	return (det);
 }
 
-void cofactor(float num[25][25], float f, float *inverse)
+void cofactor(float *num, int f, float *inverse)
 {
-	float b[25][25], fac[25][25];
 	int p, q, m, n, i, j;
-	for (q = 0; q<f; q++)
+	for (q = 0; q < f; q++)
 	{
-		for (p = 0; p<f; p++)
+		for (p = 0; p < f; p++)
 		{
 			m = 0;
 			n = 0;
-			for (i = 0; i<f; i++)
+			for (i = 0; i < f; i++)
 			{
-				for (j = 0; j<f; j++)
+				for (j = 0; j < f; j++)
 				{
 					if (i != q && j != p)
 					{
-						b[m][n] = num[i][j];
-						if (n<(f - 2))
+						f_b_data[m*f + n] = num[i*f + j];
+						if (n < (f - 2))
 							n++;
 						else
 						{
@@ -1198,39 +1198,39 @@ void cofactor(float num[25][25], float f, float *inverse)
 					}
 				}
 			}
-			fac[q][p] = pow(-1, q + p) * determinant(b, f - 1);
+			f_fac_data[q*f + p] = pow(-1, q + p) * determinant(f_b_data, f - 1);
 		}
 	}
-	transpose(num, fac, f, inverse);
+	transpose(num, f_fac_data, f, inverse);
 }
 /*求反矩陣*/
-void transpose(float num[25][25], float fac[25][25], float r, float *inverse)
+void transpose(float *num, float *fac, int r, float *inverse)
 {
 	int i, j;
-	float b[25][25], d;
+	float d;
 
-	for (i = 0; i<r; i++)
+	for (i = 0; i < r; i++)
 	{
-		for (j = 0; j<r; j++)
+		for (j = 0; j < r; j++)
 		{
-			b[i][j] = fac[j][i];
+			f_b_data[i*r + j] = fac[j*r + i];
 		}
 	}
 	d = determinant(num, r);
-	for (i = 0; i<r; i++)
+	for (i = 0; i < r; i++)
 	{
-		for (j = 0; j<r; j++)
+		for (j = 0; j < r; j++)
 		{
-			inverse[i*(int)r+j] = b[i][j] / d;
+			inverse[i*r + j] = f_b_data[i*r + j] / d;
 		}
 	}
 	printf("反矩陣為 : \n");
 
-	for (i = 0; i<r; i++)
+	for (i = 0; i < r; i++)
 	{
-		for (j = 0; j<r; j++)
+		for (j = 0; j < r; j++)
 		{
-			printf("\t%f", inverse[i*(int)r+j]);
+			printf("\t%f", inverse[i*r + j]);
 		}
 		printf("\n");
 	}
@@ -1263,9 +1263,9 @@ void matrix_gen(float *L, int dimension, char ans){
 		printf("\n輸入值到 %d x %d 矩陣 : \n", dimension, dimension);
 		float input = 0.0;
 
-		for (row = 0; row<dimension; row++)
+		for (row = 0; row < dimension; row++)
 		{
-			for (col = 0; col<dimension; col++)
+			for (col = 0; col < dimension; col++)
 			{
 
 				scanf(" %f", &input);
@@ -1361,8 +1361,8 @@ void inverse_matrix_GPU(const int n, char ans)
 	if (err != cudaSuccess){ cout << cudaGetErrorString(err) << " in " << __FILE__ << " at line " << __LINE__ << endl; }
 	I = new float[n*n];
 
-	for (int i = 0; i<n; i++){
-		for (int j = 0; j<n; j++){
+	for (int i = 0; i < n; i++){
+		for (int j = 0; j < n; j++){
 			if (i == j) I[i*n + i] = 1.0;
 			else I[i*n + j] = 0.0;
 		}
@@ -1377,7 +1377,7 @@ void inverse_matrix_GPU(const int n, char ans)
 	cudaEventRecord(start, 0);
 
 	// L^(-1)    
-	for (int i = 0; i<n; i++){
+	for (int i = 0; i < n; i++){
 		nodiag_normalize << <numBlocks, threadsPerBlock >> >(d_A, dI, n, i);
 		diag_normalize << <numBlocks, threadsPerBlock >> >(d_A, dI, n, i);
 		gaussjordan << <numBlocks, threadsPerBlock >> >(d_A, dI, n, i);
@@ -1394,13 +1394,13 @@ void inverse_matrix_GPU(const int n, char ans)
 
 
 	printf("反矩陣為:\n");
-	for (int i = 0; i<n; i++){
-		for (int j = 0; j<n; j++){
+	for (int i = 0; i < n; i++){
+		for (int j = 0; j < n; j++){
 			printf("\t%f", iL[i * n + j]);
 		}
 		printf("\n");
 	}
-	
+
 
 	cudaFree(d_A);
 	cudaFree(dI);
@@ -1415,8 +1415,8 @@ void inverse_matrix_GPU(const int n, char ans)
 	cudaEventDestroy(stop);
 
 	printf("驗證反矩陣:\n");
-	for (int i = 0; i<n; i++){
-		for (int j = 0; j<n; j++){
+	for (int i = 0; i < n; i++){
+		for (int j = 0; j < n; j++){
 			printf("\t%f", c[i * n + j]);
 		}
 		printf("\n");
