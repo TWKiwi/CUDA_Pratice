@@ -23,7 +23,6 @@ using namespace std;
 std::string CMD = "";
 int data[DATA_SIZE];
 float f_data[DATA_SIZE];
-float f_b_data[DATA_SIZE];
 float f_c_data[DATA_SIZE];
 float f_fac_data[DATA_SIZE];
 bool InitCUDA();
@@ -59,13 +58,13 @@ clock_t matmultCUDA_KSF_shared_pitch(const float* a, int lda, const float* b, in
 __global__ static void matMultCUDA_KSF_shared_pitch(const float* a, size_t lda, const float* b, size_t ldb, float* c, size_t ldc, int n);
 
 void inverse_matrix();
-float determinant(float *a, int k);
-void cofactor(float *num, int f, float *inverse);
-void transpose(float *num, float *fac, int r, float *inverse);
+float determinant(float *data, int k);
+void cofactor(int f, float *inverse);
+void transpose(int r, float *inverse);
 
 void inverse_matrix();
-void inverse_matrix_CPU(float *a, int k);
-void inverse_matrix_GPU(const int n, char ans);
+void inverse_matrix_CPU(int k);
+void inverse_matrix_GPU(const int n);
 
 
 
@@ -121,7 +120,7 @@ int main()
 			FloatArrayMultiCompute_KSF(n);
 			printf("(3).KSF改良 Shared Memory Pitch\n");
 			FloatArrayMultiCompute_KSF_shared_pitch(n);
-			printf("(4).反矩陣\n");
+			printf("(4).GPU反矩陣\n");
 			inverse_matrix();
 
 
@@ -1047,7 +1046,7 @@ void inverse_matrix()
 	char ans;
 	printf("\n輸入矩陣大小 : ");
 	scanf(" %d", &k);
-	printf("\n值是否亂數產生?(y|n) : ");
+	/*printf("\n值是否亂數產生?(y|n) : ");
 	scanf(" %c", &ans);
 	if (ans == 'y')
 	{
@@ -1080,10 +1079,10 @@ void inverse_matrix()
 			printf("\t%f", f_data[i * k + j]);
 		}
 		printf("\n");
-	}
+	}*/
 
-	inverse_matrix_GPU(k, ans);
-	inverse_matrix_CPU(f_data, k);
+	inverse_matrix_GPU(k);
+	//inverse_matrix_CPU(k);
 
 }
 
@@ -1094,23 +1093,23 @@ void inverse_matrix()
 * 反矩陣
 * http://www.ccodechamp.com/c-program-to-find-inverse-of-matrix/
 */
-void inverse_matrix_CPU(float *a, int k)
+void inverse_matrix_CPU(int k)
 {
 	printf("\n//////////////////////////////////////////////////////////////////\n");
 	printf("\n/////////////////////////CPU反矩陣開始////////////////////////////\n");
-	float d;
+	float d = 0.0;
 	float* inverse = (float*)malloc(sizeof(float)* k * k);;
 	clock_t determinant_start = clock();
-	d = determinant(a, k);
+	d = determinant(f_data, k);
 
-	if (d == 0)
+	if (d == 0.0)
 	{
 		printf("輸入值有誤，無法求得反矩陣\n");
 		printf("行列式值 = %f, 共耗時%f\n", d, (float)(clock() - determinant_start) / CLOCKS_PER_SEC);
 	}
 	else
 	{
-		cofactor(a, k, inverse);
+		cofactor(k, inverse);
 		printf("行列式值 = %f, 共耗時%f\n", d, (float)(clock() - determinant_start) / CLOCKS_PER_SEC);
 
 		printf("\n驗證反矩陣: \n");
@@ -1120,8 +1119,8 @@ void inverse_matrix_CPU(float *a, int k)
 				f_c_data[i*k + j] = 0; /*初始化陣列C */
 				for (int k_i = 0; k_i < k; k_i++) {
 					size_t index = k_i * k + j;
-					f_c_data[i*k + j] += a[i*k + k_i] * inverse[index]; /*陣列A乘上陣列B,存入陣列C */
-					//printf("\na[%d][%d]:%f inverse[%d]:%f", i, k_i, a[i][k_i], index, inverse[index]); /*輸出陣列C */
+					f_c_data[i*k + j] += f_data[i*k + k_i] * inverse[index]; /*陣列A乘上陣列B,存入陣列C */
+					//printf("\nf_data[%d][%d]:%f inverse[%d]:%f", i, k_i, f_data[i*k + k_i], index, inverse[index]); /*輸出陣列C */
 				}
 				printf("\t%f", f_c_data[i*k + j]);
 			}
@@ -1132,13 +1131,15 @@ void inverse_matrix_CPU(float *a, int k)
 
 }
 
-float determinant(float *a, int k)
+float determinant(float *data, int k)
 {
 	float s = 1, det = 0;
+	float *f_b_data;
+	f_b_data = (float*)malloc(sizeof(float)* k * k);
 	int i, j, m, n, c;
 	if (k == 1)
 	{
-		return (a[0]);
+		return (data[0]);
 	}
 
 	det = 0;
@@ -1150,10 +1151,11 @@ float determinant(float *a, int k)
 		{
 			for (j = 0; j < k; j++)
 			{
-				f_b_data[i*k + j] = 0;
+				f_b_data[i + j*k] = 0;
 				if (i != 0 && j != c)
 				{
-					f_b_data[m*k + n] = a[i*k + j];
+					f_b_data[m*k + n] = data[i*k + j];
+					//if (k == 5) printf("f_b_data[%d][%d]:%f = data[%d][%d]:%f;\n", m, n, f_b_data[m*k + n], i, j, data[i*k + j]);
 					if (n < (k - 2))
 						n++;
 					else
@@ -1164,17 +1166,22 @@ float determinant(float *a, int k)
 				}
 			}
 		}
-		det = det + s * (a[c] * determinant(f_b_data, k - 1));
+		det = det + s * (data[c] * determinant(f_b_data, k - 1));
+		//if (k == 2) printf("%f + %f * (data[%d]:%f * %f);\n", det, s,c, data[c], determinant(f_b_data, k - 1));
 		s = -1 * s;
 	}
 
 
-	return (det);
+	return det;
 }
 
-void cofactor(float *num, int f, float *inverse)
+
+
+void cofactor(int f, float *inverse)
 {
 	int p, q, m, n, i, j;
+	float *f_b_data;
+	f_b_data = (float*)malloc(sizeof(float)* f * f);
 	for (q = 0; q < f; q++)
 	{
 		for (p = 0; p < f; p++)
@@ -1187,7 +1194,7 @@ void cofactor(float *num, int f, float *inverse)
 				{
 					if (i != q && j != p)
 					{
-						f_b_data[m*f + n] = num[i*f + j];
+						f_b_data[m*f + n] = f_data[i*f + j];
 						if (n < (f - 2))
 							n++;
 						else
@@ -1201,22 +1208,24 @@ void cofactor(float *num, int f, float *inverse)
 			f_fac_data[q*f + p] = pow(-1, q + p) * determinant(f_b_data, f - 1);
 		}
 	}
-	transpose(num, f_fac_data, f, inverse);
+	transpose(f, inverse);
 }
 /*求反矩陣*/
-void transpose(float *num, float *fac, int r, float *inverse)
+void transpose(int r, float *inverse)
 {
 	int i, j;
+	float *f_b_data;
+	f_b_data = (float*)malloc(sizeof(float)* r * r);
 	float d;
 
 	for (i = 0; i < r; i++)
 	{
 		for (j = 0; j < r; j++)
 		{
-			f_b_data[i*r + j] = fac[j*r + i];
+			f_b_data[i*r + j] = f_fac_data[j*r + i];
 		}
 	}
-	d = determinant(num, r);
+	d = determinant(f_data, r);
 	for (i = 0; i < r; i++)
 	{
 		for (j = 0; j < r; j++)
@@ -1242,39 +1251,20 @@ void transpose(float *num, float *fac, int r, float *inverse)
  * 修改自
  * https://github.com/ZhengzhongSun/Matrix-Inversion-with-CUDA
  */
-void matrix_gen(float *L, int dimension, char ans){
+void matrix_gen(float *L, int dimension){
 	int row, col;
-	if (ans == 'y')
+
+	printf("\n\n\n生成亂數矩陣:\n");
+	for (row = 0; row < dimension; row++)
 	{
-		printf("\n\n\n生成亂數矩陣:\n");
-		for (row = 0; row < dimension; row++)
+		for (col = 0; col < dimension; col++)
 		{
-			for (col = 0; col < dimension; col++)
-			{
-				float r = rand() % 100;
-				L[row * dimension + col] = r;
-				printf("\t%f", r);
-			}
-			printf("\n");
+			float r = rand() % 100;
+			L[row * dimension + col] = r;
+			printf("\t%f", r);
 		}
+		printf("\n");
 	}
-	else
-	{
-		printf("\n輸入值到 %d x %d 矩陣 : \n", dimension, dimension);
-		float input = 0.0;
-
-		for (row = 0; row < dimension; row++)
-		{
-			for (col = 0; col < dimension; col++)
-			{
-
-				scanf(" %f", &input);
-				L[row * dimension + col] = input;
-				printf("\t%f", input);
-			}
-		}
-	}
-
 
 }
 
@@ -1334,7 +1324,7 @@ __global__ void set_zero(float *A, float *I, int n, int i){
 /*
 * GPU反矩陣
 */
-void inverse_matrix_GPU(const int n, char ans)
+void inverse_matrix_GPU(const int n)
 {
 	printf("\n//////////////////////////////////////////////////////////////////\n");
 	printf("\n/////////////////////////GPU反矩陣開始////////////////////////////\n");
@@ -1342,7 +1332,7 @@ void inverse_matrix_GPU(const int n, char ans)
 	float *iL = new float[n*n];
 	float *L = new float[n*n];
 
-	matrix_gen(L, n, ans);
+	matrix_gen(L, n);
 
 	float *d_A, *d_L, *I, *dI;
 	float time;
