@@ -22,9 +22,7 @@ using namespace std;
 
 std::string CMD = "";
 int data[DATA_SIZE];
-float f_data[DATA_SIZE];
-float f_c_data[DATA_SIZE];
-float f_fac_data[DATA_SIZE];
+
 bool InitCUDA();
 void GenerateNumbers(int *number, int size);
 void matgen(float* a, int lda, int n);
@@ -58,9 +56,12 @@ clock_t matmultCUDA_KSF_shared_pitch(const float* a, int lda, const float* b, in
 __global__ static void matMultCUDA_KSF_shared_pitch(const float* a, size_t lda, const float* b, size_t ldb, float* c, size_t ldc, int n);
 
 void inverse_matrix();
-float determinant(float *data, int k);
-void cofactor(int f, float *inverse);
-void transpose(int r, float *inverse);
+void bs(float* q, int lda, int n);
+void matgenb(float* y, int lda, int n);
+void matgen123(float* a, int lda, int n, float* z);
+void printas(float* y, int lda, int n);
+void aasd(float* a, float* y, int n, int lda);
+void printasx(float* x, int lda, int n);
 
 void inverse_matrix();
 void inverse_matrix_CPU(int k);
@@ -120,7 +121,7 @@ int main()
 			FloatArrayMultiCompute_KSF(n);
 			printf("(3).KSF改良 Shared Memory Pitch\n");
 			FloatArrayMultiCompute_KSF_shared_pitch(n);
-			printf("(4).GPU反矩陣\n");
+			printf("(4).反矩陣\n");
 			inverse_matrix();
 
 
@@ -1046,40 +1047,7 @@ void inverse_matrix()
 	char ans;
 	printf("\n輸入矩陣大小 : ");
 	scanf(" %d", &k);
-	/*printf("\n值是否亂數產生?(y|n) : ");
-	scanf(" %c", &ans);
-	if (ans == 'y')
-	{
-		for (i = 0; i < k; i++) {
-			for (j = 0; j < k; j++) {
-				f_data[i * k + j] = (int)rand() % 100;
-			}
-		}
-	}
-	else if (ans == 'n')
-	{
-		printf("\n輸入值到 %d x %d 矩陣 : \n", k, k);
-		for (i = 0; i < k; i++)
-		{
-			for (j = 0; j < k; j++)
-			{
-				scanf(" %f", &f_data[i * k + j]);
-			}
-		}
-	}
-	else
-	{
-		inverse_matrix();
-	}
-	printf("輸入矩陣為:\n");
-	for (i = 0; i < k; i++)
-	{
-		for (j = 0; j < k; j++)
-		{
-			printf("\t%f", f_data[i * k + j]);
-		}
-		printf("\n");
-	}*/
+	
 
 	inverse_matrix_GPU(k);
 	//inverse_matrix_CPU(k);
@@ -1091,159 +1059,149 @@ void inverse_matrix()
 
 /*
 * 反矩陣
-* http://www.ccodechamp.com/c-program-to-find-inverse-of-matrix/
 */
-void inverse_matrix_CPU(int k)
+void inverse_matrix_CPU(int n)
 {
-	printf("\n//////////////////////////////////////////////////////////////////\n");
-	printf("\n/////////////////////////CPU反矩陣開始////////////////////////////\n");
-	float d = 0.0;
-	float* inverse = (float*)malloc(sizeof(float)* k * k);;
-	clock_t determinant_start = clock();
-	d = determinant(f_data, k);
-
-	if (d == 0.0)
-	{
-		printf("輸入值有誤，無法求得反矩陣\n");
-		printf("行列式值 = %f, 共耗時%f\n", d, (float)(clock() - determinant_start) / CLOCKS_PER_SEC);
-	}
-	else
-	{
-		cofactor(k, inverse);
-		printf("行列式值 = %f, 共耗時%f\n", d, (float)(clock() - determinant_start) / CLOCKS_PER_SEC);
-
-		printf("\n驗證反矩陣: \n");
-
-		for (int i = 0; i < k; i++) {
-			for (int j = 0; j < k; j++) {
-				f_c_data[i*k + j] = 0; /*初始化陣列C */
-				for (int k_i = 0; k_i < k; k_i++) {
-					size_t index = k_i * k + j;
-					f_c_data[i*k + j] += f_data[i*k + k_i] * inverse[index]; /*陣列A乘上陣列B,存入陣列C */
-					//printf("\nf_data[%d][%d]:%f inverse[%d]:%f", i, k_i, f_data[i*k + k_i], index, inverse[index]); /*輸出陣列C */
-				}
-				printf("\t%f", f_c_data[i*k + j]);
-			}
-			printf("\n");
-		}
-	}
+	srand(time(NULL));
+	float *a, *b, *c, *d, *x, *y, *z, *q;
 
 
+	a = (float*)malloc(sizeof(float)* n * n);
+	c = (float*)malloc(sizeof(float)* n * n);
+	x = (float*)malloc(sizeof(float)* n * n);
+	y = (float*)malloc(sizeof(float)* n * n);
+	z = (float*)malloc(sizeof(float)* n * n);
+	q = (float*)malloc(sizeof(float)* n * n);
+	bs(q, n, n);
+	matgen(a, n, n);
+	
+	clock_t start = clock();
+
+	matgen123(a, n, n, z);
+	matgenb(y, n, n);//反矩陣
+	aasd(a, y, n, n);
+	matmult(a, n, y, n, c, n, n);
+	printas(c, n, n);
+	matmult(c, n, z, n, x, n, n);
+
+	clock_t end = clock();
+
+	printf("\n驗證反矩陣: \n");
+	printasx(x, n, n);
+
+	printf("耗時%f秒\n\n", (float)(end - start) / CLOCKS_PER_SEC);
 }
 
-float determinant(float *data, int k)
-{
-	float s = 1, det = 0;
-	float *f_b_data;
-	f_b_data = (float*)malloc(sizeof(float)* k * k);
-	int i, j, m, n, c;
-	if (k == 1)
-	{
-		return (data[0]);
-	}
-
-	det = 0;
-	for (c = 0; c < k; c++)
-	{
-		m = 0;
-		n = 0;
-		for (i = 0; i < k; i++)
-		{
-			for (j = 0; j < k; j++)
-			{
-				f_b_data[i + j*k] = 0;
-				if (i != 0 && j != c)
-				{
-					f_b_data[m*k + n] = data[i*k + j];
-					//if (k == 5) printf("f_b_data[%d][%d]:%f = data[%d][%d]:%f;\n", m, n, f_b_data[m*k + n], i, j, data[i*k + j]);
-					if (n < (k - 2))
-						n++;
-					else
-					{
-						n = 0;
-						m++;
-					}
-				}
-			}
-		}
-		det = det + s * (data[c] * determinant(f_b_data, k - 1));
-		//if (k == 2) printf("%f + %f * (data[%d]:%f * %f);\n", det, s,c, data[c], determinant(f_b_data, k - 1));
-		s = -1 * s;
-	}
-
-
-	return det;
-}
-
-
-
-void cofactor(int f, float *inverse)
-{
-	int p, q, m, n, i, j;
-	float *f_b_data;
-	f_b_data = (float*)malloc(sizeof(float)* f * f);
-	for (q = 0; q < f; q++)
-	{
-		for (p = 0; p < f; p++)
-		{
-			m = 0;
-			n = 0;
-			for (i = 0; i < f; i++)
-			{
-				for (j = 0; j < f; j++)
-				{
-					if (i != q && j != p)
-					{
-						f_b_data[m*f + n] = f_data[i*f + j];
-						if (n < (f - 2))
-							n++;
-						else
-						{
-							n = 0;
-							m++;
-						}
-					}
-				}
-			}
-			f_fac_data[q*f + p] = pow(-1, q + p) * determinant(f_b_data, f - 1);
-		}
-	}
-	transpose(f, inverse);
-}
-/*求反矩陣*/
-void transpose(int r, float *inverse)
+void bs(float* q, int lda, int n)
 {
 	int i, j;
-	float *f_b_data;
-	f_b_data = (float*)malloc(sizeof(float)* r * r);
-	float d;
-
-	for (i = 0; i < r; i++)
+	for (i = 0; i < n; i++)
 	{
-		for (j = 0; j < r; j++)
+		for (j = 0; j < n; j++)
 		{
-			f_b_data[i*r + j] = f_fac_data[j*r + i];
-		}
-	}
-	d = determinant(f_data, r);
-	for (i = 0; i < r; i++)
-	{
-		for (j = 0; j < r; j++)
-		{
-			inverse[i*r + j] = f_b_data[i*r + j] / d;
-		}
-	}
-	printf("反矩陣為 : \n");
-
-	for (i = 0; i < r; i++)
-	{
-		for (j = 0; j < r; j++)
-		{
-			printf("\t%f", inverse[i*r + j]);
+			if (i == j){
+				q[i * lda + j] = 1;
+			}
+			else
+			{
+				q[i * lda + j] = 0;
+			}
 		}
 		printf("\n");
 	}
 }
+//反矩陣
+void matgenb(float* y, int lda, int n)
+{
+	int i, j;
+	for (i = 0; i < n; i++)
+	{
+		for (j = 0; j < n; j++)
+		{
+			if (i == j)
+				y[i * lda + j] = 1;
+			else
+				y[i * lda + j] = 0;
+			//printf("%.2f  ",y[i * lda + j]);
+		}
+		printf("\n");
+	}
+}
+
+void matgen123(float* a, int lda, int n, float* z)
+{
+	int i, j;
+	for (i = 0; i < n; i++)
+	{
+		for (j = 0; j < n; j++)
+		{
+			z[i * lda + j] = a[i * lda + j];
+		}
+	}
+}
+
+void printas(float* y, int lda, int n)
+{
+	int i, j;
+	for (i = 0; i < n; i++)
+	{
+		for (j = 0; j < n; j++)
+		{
+
+			printf("%.2f  ", y[i * lda + j]);
+		}
+		printf("\n");
+	}
+}
+
+void aasd(float* a, float* y, int n, int lda)
+{
+	double temp;
+	for (int k = 0; k<n; k++)
+	{
+		temp = 0;
+		for (int j = 0; j<n; j++)
+		{
+			temp += a[k *lda + j];
+			if (a[k *lda + k] != 1)
+			{
+				temp = a[k *lda + k];
+				for (int i = 0; i<n; i++)
+				{
+					a[k *lda + i] = a[k *lda + i] / temp;//亂數陣列
+					y[k *lda + i] = y[k *lda + i] / temp;
+				}
+			}
+
+			for (int i = 0; i<n; i++)
+			{
+				if (a[i *lda + k] != 0 && i != k)
+				{
+					temp = a[i *lda + k];
+					for (int j = 0; j<n; j++)
+					{
+						a[i *lda + j] = a[i *lda + j] - (a[k *lda + j] * temp);
+						y[i *lda + j] = y[i *lda + j] - (y[k *lda + j] * temp);
+					}
+				}
+			}
+		}
+	}
+}
+
+void printasx(float* x, int lda, int n)
+{
+	int i, j;
+	for (i = 0; i < n; i++)
+	{
+		for (j = 0; j < n; j++)
+		{
+			printf("%.8f  ", x[i * lda + j]);
+		}
+		printf("\n");
+	}
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////開始實作做GPU反矩陣///////////////////////////////////////////////////

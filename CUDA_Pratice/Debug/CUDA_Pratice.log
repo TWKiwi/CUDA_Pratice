@@ -1,11 +1,11 @@
-﻿已經開始建置於 2017/5/26 下午 02:41:20。
+﻿已經開始建置於 2017/5/26 下午 05:11:36。
      1>節點 2 (Build 目標) 上的專案 "C:\Users\adimin\Documents\Visual Studio 2013\Projects\CUDA_Pratice\CUDA_Pratice\CUDA_Pratice.vcxproj"。
      1>AddCudaCompileDeps:
          C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\cl.exe /E /nologo /showIncludes /TP /D__CUDACC__ /DWIN32 /D_DEBUG /D_CONSOLE /D_MBCS /I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include" /I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\bin" /I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include" /I. /FIcuda_runtime.h /c "C:\Users\adimin\Documents\Visual Studio 2013\Projects\CUDA_Pratice\CUDA_Pratice\kernel.cu" 
      1>專案 "C:\Users\adimin\Documents\Visual Studio 2013\Projects\CUDA_Pratice\CUDA_Pratice\CUDA_Pratice.vcxproj" (1) 正在節點 2 (CudaBuildCore 目標) 上建置 "C:\Users\adimin\Documents\Visual Studio 2013\Projects\CUDA_Pratice\CUDA_Pratice\CUDA_Pratice.vcxproj" (1:2)。
      1>CudaBuildCore:
          Compiling CUDA source file kernel.cu...
-         cmd.exe /C "C:\Users\adimin\AppData\Local\Temp\tmp6dd391f6250f4eebbafbec1f0c5bec27.cmd"
+         cmd.exe /C "C:\Users\adimin\AppData\Local\Temp\tmp8c85166821264f98b57d7c2a1a626bfe.cmd"
          "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\bin\nvcc.exe" -gencode=arch=compute_20,code=\"sm_20,compute_20\" --use-local-env --cl-version 2013 -ccbin "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin"  -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include"  -G   --keep-dir Debug -maxrregcount=0  --machine 32 --compile -cudart static  -g   -DWIN32 -D_DEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /Od /FS /Zi /RTC1 /MDd " -o Debug\kernel.cu.obj "C:\Users\adimin\Documents\Visual Studio 2013\Projects\CUDA_Pratice\CUDA_Pratice\kernel.cu"
          
          C:\Users\adimin\Documents\Visual Studio 2013\Projects\CUDA_Pratice\CUDA_Pratice>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\bin\nvcc.exe" -gencode=arch=compute_20,code=\"sm_20,compute_20\" --use-local-env --cl-version 2013 -ccbin "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin"  -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include"  -G   --keep-dir Debug -maxrregcount=0  --machine 32 --compile -cudart static  -g   -DWIN32 -D_DEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /Od /FS /Zi /RTC1 /MDd " -o Debug\kernel.cu.obj "C:\Users\adimin\Documents\Visual Studio 2013\Projects\CUDA_Pratice\CUDA_Pratice\kernel.cu" 
@@ -28,13 +28,15 @@
      1>c:\program files\nvidia gpu computing toolkit\cuda\v8.0\include\sm_20_intrinsics.h : warning C4819: 檔案含有無法在目前字碼頁 (950) 中表示的字元。請以 Unicode 格式儲存檔案以防止資料遺失
      1>c:\program files\nvidia gpu computing toolkit\cuda\v8.0\include\sm_20_intrinsics.h(943): warning C4819: 檔案含有無法在目前字碼頁 (950) 中表示的字元。請以 Unicode 格式儲存檔案以防止資料遺失
      1>C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include\cuda_runtime_api.h(1946): warning C4819: 檔案含有無法在目前字碼頁 (950) 中表示的字元。請以 Unicode 格式儲存檔案以防止資料遺失
-     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(670): warning : variable "offset" was declared but never referenced
-     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(670): warning : variable "mask" was declared but never referenced
-     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(987): warning : variable "blocks" was declared but never referenced
-     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(1045): warning : variable "i" was declared but never referenced
-     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(1045): warning : variable "j" was declared but never referenced
-     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(1046): warning : variable "ans" was declared but never referenced
-     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(1337): warning : variable "d_L" was declared but never referenced
+     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(671): warning : variable "offset" was declared but never referenced
+     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(671): warning : variable "mask" was declared but never referenced
+     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(988): warning : variable "blocks" was declared but never referenced
+     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(1046): warning : variable "i" was declared but never referenced
+     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(1046): warning : variable "j" was declared but never referenced
+     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(1047): warning : variable "ans" was declared but never referenced
+     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(1066): warning : variable "b" was declared but never referenced
+     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(1066): warning : variable "d" was declared but never referenced
+     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(1295): warning : variable "d_L" was declared but never referenced
      1>C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include\cuda_runtime.h : warning C4819: 檔案含有無法在目前字碼頁 (950) 中表示的字元。請以 Unicode 格式儲存檔案以防止資料遺失
      1>c:\program files\nvidia gpu computing toolkit\cuda\v8.0\include\cuda_runtime_api.h(1946): warning C4819: 檔案含有無法在目前字碼頁 (950) 中表示的字元。請以 Unicode 格式儲存檔案以防止資料遺失
      1>c:\program files\nvidia gpu computing toolkit\cuda\v8.0\include\math_functions.h : warning C4819: 檔案含有無法在目前字碼頁 (950) 中表示的字元。請以 Unicode 格式儲存檔案以防止資料遺失
@@ -54,13 +56,15 @@
      1>c:\program files\nvidia gpu computing toolkit\cuda\v8.0\include\sm_20_intrinsics.h : warning C4819: 檔案含有無法在目前字碼頁 (950) 中表示的字元。請以 Unicode 格式儲存檔案以防止資料遺失
      1>c:\program files\nvidia gpu computing toolkit\cuda\v8.0\include\sm_20_intrinsics.h(943): warning C4819: 檔案含有無法在目前字碼頁 (950) 中表示的字元。請以 Unicode 格式儲存檔案以防止資料遺失
      1>C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include\cuda_runtime_api.h(1946): warning C4819: 檔案含有無法在目前字碼頁 (950) 中表示的字元。請以 Unicode 格式儲存檔案以防止資料遺失
-     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(670): warning : variable "offset" was declared but never referenced
-     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(670): warning : variable "mask" was declared but never referenced
-     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(987): warning : variable "blocks" was declared but never referenced
-     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(1045): warning : variable "i" was declared but never referenced
-     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(1045): warning : variable "j" was declared but never referenced
-     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(1046): warning : variable "ans" was declared but never referenced
-     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(1337): warning : variable "d_L" was declared but never referenced
+     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(671): warning : variable "offset" was declared but never referenced
+     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(671): warning : variable "mask" was declared but never referenced
+     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(988): warning : variable "blocks" was declared but never referenced
+     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(1046): warning : variable "i" was declared but never referenced
+     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(1046): warning : variable "j" was declared but never referenced
+     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(1047): warning : variable "ans" was declared but never referenced
+     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(1066): warning : variable "b" was declared but never referenced
+     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(1066): warning : variable "d" was declared but never referenced
+     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(1295): warning : variable "d_L" was declared but never referenced
      1>c:\program files\nvidia gpu computing toolkit\cuda\v8.0\include\math_functions.h : warning C4819: 檔案含有無法在目前字碼頁 (950) 中表示的字元。請以 Unicode 格式儲存檔案以防止資料遺失
      1>c:\program files\nvidia gpu computing toolkit\cuda\v8.0\include\math_functions.h(849): warning C4819: 檔案含有無法在目前字碼頁 (950) 中表示的字元。請以 Unicode 格式儲存檔案以防止資料遺失
      1>c:\program files\nvidia gpu computing toolkit\cuda\v8.0\include\math_functions.h(1787): warning C4819: 檔案含有無法在目前字碼頁 (950) 中表示的字元。請以 Unicode 格式儲存檔案以防止資料遺失
@@ -112,16 +116,22 @@
      1>c:\program files\nvidia gpu computing toolkit\cuda\v8.0\include\math_functions.h(7956): warning C4819: 檔案含有無法在目前字碼頁 (950) 中表示的字元。請以 Unicode 格式儲存檔案以防止資料遺失
      1>CUDACOMPILE : nvcc warning : The 'compute_20', 'sm_20', and 'sm_21' architectures are deprecated, and may be removed in a future release (Use -Wno-deprecated-gpu-targets to suppress warning).
          kernel.cu
-     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(733): warning C4244: '=' : 將 'double' 轉換為 'float'，由於類型不同，可能導致資料遺失
-     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(817): warning C4244: 'return' : 將 'float' 轉換為 'clock_t'，由於類型不同，可能導致資料遺失
-     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(896): warning C4244: 'return' : 將 'float' 轉換為 'clock_t'，由於類型不同，可能導致資料遺失
-     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(1001): warning C4244: 'return' : 將 'float' 轉換為 'clock_t'，由於類型不同，可能導致資料遺失
-     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(1045): warning C4101: 'i' : 未參考的區域變數
-     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(1046): warning C4101: 'ans' : 未參考的區域變數
-     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(1045): warning C4101: 'j' : 未參考的區域變數
-     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(1208): warning C4244: '=' : 將 'double' 轉換為 'float'，由於類型不同，可能導致資料遺失
-     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(1262): warning C4244: '正在初始化' : 將 'int' 轉換為 'float'，由於類型不同，可能導致資料遺失
-     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(1337): warning C4101: 'd_L' : 未參考的區域變數
+     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(734): warning C4244: '=' : 將 'double' 轉換為 'float'，由於類型不同，可能導致資料遺失
+     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(818): warning C4244: 'return' : 將 'float' 轉換為 'clock_t'，由於類型不同，可能導致資料遺失
+     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(897): warning C4244: 'return' : 將 'float' 轉換為 'clock_t'，由於類型不同，可能導致資料遺失
+     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(1002): warning C4244: 'return' : 將 'float' 轉換為 'clock_t'，由於類型不同，可能導致資料遺失
+     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(1046): warning C4101: 'i' : 未參考的區域變數
+     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(1047): warning C4101: 'ans' : 未參考的區域變數
+     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(1046): warning C4101: 'j' : 未參考的區域變數
+     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(1065): warning C4244: '引數' : 將 'time_t' 轉換為 'unsigned int'，由於類型不同，可能導致資料遺失
+     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(1066): warning C4101: 'b' : 未參考的區域變數
+     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(1066): warning C4101: 'd' : 未參考的區域變數
+     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(1171): warning C4244: '=' : 將 'double' 轉換為 'float'，由於類型不同，可能導致資料遺失
+     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(1172): warning C4244: '=' : 將 'double' 轉換為 'float'，由於類型不同，可能導致資料遺失
+     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(1183): warning C4244: '=' : 將 'double' 轉換為 'float'，由於類型不同，可能導致資料遺失
+     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(1184): warning C4244: '=' : 將 'double' 轉換為 'float'，由於類型不同，可能導致資料遺失
+     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(1220): warning C4244: '正在初始化' : 將 'int' 轉換為 'float'，由於類型不同，可能導致資料遺失
+     1>C:/Users/adimin/Documents/Visual Studio 2013/Projects/CUDA_Pratice/CUDA_Pratice/kernel.cu(1295): warning C4101: 'd_L' : 未參考的區域變數
      1>專案 "C:\Users\adimin\Documents\Visual Studio 2013\Projects\CUDA_Pratice\CUDA_Pratice\CUDA_Pratice.vcxproj" (CudaBuildCore 目標) 建置完成。
      1>Link:
          C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\adimin\Documents\Visual Studio 2013\Projects\CUDA_Pratice\Debug\CUDA_Pratice.exe" /INCREMENTAL /NOLOGO /LIBPATH:"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\lib\Win32" cudart.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\adimin\Documents\Visual Studio 2013\Projects\CUDA_Pratice\Debug\CUDA_Pratice.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\adimin\Documents\Visual Studio 2013\Projects\CUDA_Pratice\Debug\CUDA_Pratice.lib" /MACHINE:X86 Debug\kernel.cu.obj
@@ -138,4 +148,4 @@
 
 建置成功。
 
-經過時間 00:00:03.49
+經過時間 00:00:03.52
