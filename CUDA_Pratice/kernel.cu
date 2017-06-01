@@ -1050,7 +1050,7 @@ void inverse_matrix()
 	
 
 	inverse_matrix_GPU(k);
-	//inverse_matrix_CPU(k);
+	inverse_matrix_CPU(k);
 
 }
 
@@ -1062,7 +1062,8 @@ void inverse_matrix()
 */
 void inverse_matrix_CPU(int n)
 {
-	srand(time(NULL));
+	printf("\n//////////////////////////////////////////////////////////////////\n");
+	printf("\n/////////////////////////CPU反矩陣開始////////////////////////////\n");
 	float *a, *b, *c, *d, *x, *y, *z, *q;
 
 
@@ -1073,14 +1074,15 @@ void inverse_matrix_CPU(int n)
 	z = (float*)malloc(sizeof(float)* n * n);
 	q = (float*)malloc(sizeof(float)* n * n);
 	bs(q, n, n);
-	matgen(a, n, n);
+	//matgen(a, n, n);
 	
 	clock_t start = clock();
-
+	printf("\n產生亂數矩陣: \n");
 	matgen123(a, n, n, z);
 	matgenb(y, n, n);//反矩陣
 	aasd(a, y, n, n);
 	matmult(a, n, y, n, c, n, n);
+	printf("\n產生反矩陣: \n");
 	printas(c, n, n);
 	matmult(c, n, z, n, x, n, n);
 
@@ -1107,7 +1109,6 @@ void bs(float* q, int lda, int n)
 				q[i * lda + j] = 0;
 			}
 		}
-		printf("\n");
 	}
 }
 //反矩陣
@@ -1122,9 +1123,8 @@ void matgenb(float* y, int lda, int n)
 				y[i * lda + j] = 1;
 			else
 				y[i * lda + j] = 0;
-			//printf("%.2f  ",y[i * lda + j]);
+			//printf("\t%f  ",y[i * lda + j]);
 		}
-		printf("\n");
 	}
 }
 
@@ -1135,8 +1135,11 @@ void matgen123(float* a, int lda, int n, float* z)
 	{
 		for (j = 0; j < n; j++)
 		{
+			a[i * lda + j] = (float)(rand() % 100);
 			z[i * lda + j] = a[i * lda + j];
+			printf("\t%.5f  ", z[i * lda + j]);
 		}
+		printf("\n");
 	}
 }
 
@@ -1148,7 +1151,7 @@ void printas(float* y, int lda, int n)
 		for (j = 0; j < n; j++)
 		{
 
-			printf("%.2f  ", y[i * lda + j]);
+			printf("\t%.5f  ", y[i * lda + j]);
 		}
 		printf("\n");
 	}
@@ -1196,7 +1199,7 @@ void printasx(float* x, int lda, int n)
 	{
 		for (j = 0; j < n; j++)
 		{
-			printf("%.8f  ", x[i * lda + j]);
+			printf("\t%.5f  ", x[i * lda + j]);
 		}
 		printf("\n");
 	}
